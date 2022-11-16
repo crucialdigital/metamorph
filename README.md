@@ -41,7 +41,7 @@ This is the contents of the published config file:
 ```php
 return [
 ];
-```
+```m
 
 Optionally, you can publish the views using
 
@@ -76,7 +76,8 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
-- [Humbert DJAGLO](https://github.com/crucialdigital)
+- [Humbert DJAGLO](https://www.facebook.com/humbert.djaglo)
+- [Mawaba BOTOSSI](https://www.facebook.com/tbotossi)
 - [All Contributors](../../contributors)
 
 ## License
