@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+
+class {{ class_name }} extends \CrucialDigital\Metamorph\Models\BaseModel
+{
+    protected $guarded = ['_id'];
+
+
+    public static function search(): array
+    {
+        return {{ search_fields }};
+    }
+
+    public static function label(): string
+    {
+        return {{ display_label }};
+    }
+}
