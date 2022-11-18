@@ -19,7 +19,7 @@ Route::prefix('api/metamorph')->middleware(['api'])->group(function () {
             Route::post('/entities', [CoreFormResourcesController::class, 'entities']);
             Route::post('/entity/{name}', [CoreFormResourcesController::class, 'fetchResources']);
         });
-        Route::get('/fields/{entity}', [CoreFormController::class, 'defaultFields']);
+        Route::post('/exports/{entity}/{form}', [SearchController::class, 'export']);
         Route::post('/validate/form-data/{id}', [CoreFormDataController::class, 'validateFormData']);
         Route::patch('/reject/form-data/{id}', [CoreFormDataController::class, 'rejectFormData']);
 

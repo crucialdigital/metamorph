@@ -3,8 +3,12 @@
 namespace CrucialDigital\Metamorph\Models;
 
 
+use Illuminate\Support\Collection;
 use Jenssegers\Mongodb\Relations\HasMany;
 
+/**
+ * @property Collection $inputs
+ */
 
 class CoreForm extends BaseModel
 {

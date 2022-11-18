@@ -2,10 +2,15 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
+use CrucialDigital\Metamorph\Exports\DataModelsExport;
+use CrucialDigital\Metamorph\Models\CoreForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Maatwebsite\Excel\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SearchController extends Controller
 {
@@ -21,6 +26,30 @@ class SearchController extends Controller
             return response()->json(null, 404);
         }
     }
+
+    /**
+     * @param $entity
+     * @param $form
+     * @return Response|BinaryFileResponse|JsonResponse
+     */
+
+    public function export($entity, $form): Response|BinaryFileResponse|JsonResponse
+    {
+        $form = CoreForm::findOrFail($form);
+        $builder = $this->_makeBuilder($entity);
+
+        if ($builder != null) {
+            return (new DataModelsExport((new ResourceQueryLoader($builder))->load(), $form))
+                ->download($entity . '.xlsx', Excel::XLSX);
+        } else {
+            return response()->json(null, 404);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
 
     public function findAll(Request $request): JsonResponse
     {
@@ -48,6 +77,10 @@ class SearchController extends Controller
         return response()->json($resources);
     }
 
+    /**
+     * @param $entity
+     * @return Builder|null
+     */
     private function _makeBuilder($entity): ?Builder
     {
         return config('metamorph.models.' . $entity)::query();
