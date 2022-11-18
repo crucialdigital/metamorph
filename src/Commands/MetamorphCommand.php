@@ -9,7 +9,7 @@ use Symfony\Component\Finder\Finder;
 
 class MetamorphCommand extends Command
 {
-    public $signature = 'metamorph:models {--name?}';
+    public $signature = 'metamorph:models {--name=""}';
 
     public $description = 'Run or update all models';
 
@@ -17,9 +17,10 @@ class MetamorphCommand extends Command
     {
         $name = $this->option('name');
         $model_dir = config('metamorph.data_model_base_dir');
+        $file_path = trim($model_dir . '/' . $name . '.json');
 
-        $models = isset($name)
-            ? [trim($model_dir . '/' . $name . '.json')]
+        $models = (isset($name) && $name != '' && file_exists($file_path))
+            ? [$file_path]
             : iterator_to_array(
                 Finder::create()->files()
                     ->ignoreDotFiles(true)
@@ -38,11 +39,11 @@ class MetamorphCommand extends Command
                     }
                 });
             }
-            $this->comment('Preformed ' . $model['ref']);
+            $this->info('Preformed ' . $model['ref']);
         });
 
 
-        $this->comment('All done');
+        $this->alert('All done');
 
         return self::SUCCESS;
     }
