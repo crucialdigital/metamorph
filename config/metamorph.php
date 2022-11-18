@@ -49,4 +49,13 @@ return [
         // Enter models here !
     ],
 
+
+    /*
+     * The repositories' is the custom builder form fetching model's data
+     * i.e: 'user' =
+     */
+    'repositories' => [
+
+    ]
+
 ];

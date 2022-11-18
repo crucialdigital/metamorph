@@ -19,7 +19,9 @@ class CoreFormResourcesController extends Controller
      */
     public function entities(): JsonResponse
     {
-        return response()->json(config('metamorph.resources', []));
+        $r = collect(config('metamorph.resources', []));
+        $r = array_values($r->sortBy('label')->toArray());
+        return response()->json($r);
     }
 
     public function fetchResources(Request $request, $entity): JsonResponse

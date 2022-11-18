@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
+use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
 use CrucialDigital\Metamorph\Models\CoreForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
@@ -68,7 +69,7 @@ class SearchController extends Controller
 
                 $data = $this->_makeBuilder($entity)?->whereIn('_id', $value)->get();
 
-                $resources[$field] = implode(', ', $data?->map(function ($res) use($entity) {
+                $resources[$field] = implode(', ', $data?->map(function ($res) use ($entity) {
                         $res = $res->toArray();
                         return $res[config('metamorph.models.' . $entity)::label()] ?? '----';
                     })?->toArray() ?? []);
@@ -83,7 +84,25 @@ class SearchController extends Controller
      */
     private function _makeBuilder($entity): ?Builder
     {
-        return config('metamorph.models.' . $entity)::query();
+        $default = config('metamorph.models.' . $entity);
+        if (!class_exists($default)) {
+            abort(500, "Class $default does not exists !");
+        } else {
+            $default = $default::query();
+        }
+        $repository = config('metamorph.repositories.' . $entity);
+
+        if ($repository && !class_exists($repository)) {
+            abort(500, "Class $repository does not exists !");
+        }
+
+        if ($repository && !(new $repository instanceof DataRepositoryBuilder)) {
+            abort(500, "The data repository must implement CrucialDigital\Metamorph\DataRepositoryBuilder class");
+        }
+        if ($repository) {
+            return (new $repository)->builder();
+        }
+        return $default;
     }
 
 
