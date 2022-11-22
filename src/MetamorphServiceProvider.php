@@ -3,9 +3,10 @@
 namespace CrucialDigital\Metamorph;
 
 use CrucialDigital\Metamorph\Commands\MakeInheritModel;
+use CrucialDigital\Metamorph\Commands\MakeRepository;
+use CrucialDigital\Metamorph\Commands\MetamorphCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use CrucialDigital\Metamorph\Commands\MetamorphCommand;
 
 class MetamorphServiceProvider extends PackageServiceProvider
 {
@@ -20,6 +21,6 @@ class MetamorphServiceProvider extends PackageServiceProvider
             ->name('metamorph')
             ->hasConfigFile()
             ->hasRoute('api')
-            ->hasCommands([MetamorphCommand::class, MakeInheritModel::class]);
+            ->hasCommands([MetamorphCommand::class, MakeInheritModel::class, MakeRepository::class]);
     }
 }

@@ -11,10 +11,16 @@ return [
 
 
     /*
-     * Directory in which data models are stored
+     * Directory in which models are stored
      */
 
     'model_dir' => app_path('Models'),
+
+    /*
+     * Directory in which repositories are stored
+     */
+
+    'repository_dir' => app_path('Repositories'),
 
     /*
      * Middleware for routes

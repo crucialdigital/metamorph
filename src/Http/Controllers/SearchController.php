@@ -86,14 +86,14 @@ class SearchController extends Controller
     {
         $default = config('metamorph.models.' . $entity);
         if (!class_exists($default)) {
-            abort(500, "Class $default does not exists !");
+            abort(404, "Entity not found !");
         } else {
             $default = $default::query();
         }
         $repository = config('metamorph.repositories.' . $entity);
 
         if ($repository && !class_exists($repository)) {
-            abort(500, "Class $repository does not exists !");
+            abort(404, "Repository $entity does not exists !");
         }
 
         if ($repository && !(new $repository instanceof DataRepositoryBuilder)) {

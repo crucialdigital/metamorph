@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Models\{{ model }};
+use CrucialDigital\Metamorph\DataRepositoryBuilder;
+use Illuminate\Database\Eloquent\Builder;
+
+class {{ class_name }} extends DataRepositoryBuilder
+{
+
+    public function builder(): Builder
+    {
+        return {{ model }}::query();
+    }
+}
