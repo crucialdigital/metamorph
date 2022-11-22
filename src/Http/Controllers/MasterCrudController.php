@@ -2,31 +2,14 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
-use CrucialDigital\Metamorph\Metamorph;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterCrudFormRequest;
-use CrucialDigital\Metamorph\ResourceQueryLoader;
+use CrucialDigital\Metamorph\Metamorph;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MasterCrudController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @param string $model
-     * @return JsonResponse
-     */
-    public function index(string $model): JsonResponse
-    {
-        $class_name = config('metamorph.models.' . $model);
-        if (!class_exists($class_name)) abort(404);
-        $models = $class_name::query();
-        $models = (new ResourceQueryLoader($models))->load();
-        return response()->json($models);
-    }
-
-
     /**
      * Store a newly created resource in storage.
      *
@@ -42,7 +25,11 @@ class MasterCrudController extends Controller
 
         $entity = config('metamorph.models.' . $model)::create($formData);
 
-        $entity?->fill(Metamorph::mapFormRequestFiles($request, $entity->_id, $request->input('form_id')))->save();
+        $entity?->fill(Metamorph::mapFormRequestFiles(
+            $request,
+            $entity->_id,
+            $request->input('form_id')
+        ))->save();
 
         return response()->json($entity->fresh());
 
