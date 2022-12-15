@@ -28,6 +28,10 @@ class MakeRepository extends Command
      */
     public function handle(): int
     {
+        if ($this->option('model') == "") {
+            $this->error('Model is required');
+            return self::FAILURE;
+        }
         $dir = config('metamorph.repository_dir', app_path('/Repositories')) . "/";
         if (file_exists($dir . Str::ucfirst($this->argument('name')))) {
             $this->error('The repository ' . $dir . Str::ucfirst($this->argument('name')) . ' already exists !');
