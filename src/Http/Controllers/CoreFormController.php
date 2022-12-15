@@ -19,7 +19,7 @@ class CoreFormController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $coreForm = CoreForm::query()->where('owner_id', Auth::id());
+        $coreForm = CoreForm::query();
         if ($request->has('type') && $request->input('type') !== null) {
             $coreForm = $coreForm->where('entity', $request->query('type'));
         }
