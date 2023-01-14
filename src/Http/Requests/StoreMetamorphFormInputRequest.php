@@ -4,7 +4,7 @@ namespace CrucialDigital\Metamorph\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreCoreFormInputRequest extends FormRequest
+class StoreMetamorphFormInputRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +25,7 @@ class StoreCoreFormInputRequest extends FormRequest
     {
         return [
             'field' => ['required', 'string'],
-            'form_id' => ['required', 'string', 'exists:core_forms,_id'],
+            'form_id' => ['required', 'string', 'exists:metamorph_forms,_id'],
             'name' => ['required', 'string'],
             'label' => ['nullable', 'string', 'min:2'],
             'type' => ['required', 'string', 'in:text,longtext,select,multiselect,multiresource,resourceselect,resource,number,tel,email,date,photo,file,geopoint,polygon'],

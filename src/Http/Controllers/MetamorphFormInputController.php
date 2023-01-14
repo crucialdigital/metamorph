@@ -3,22 +3,22 @@
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
 
-use CrucialDigital\Metamorph\Http\Requests\StoreCoreFormInputRequest;
-use CrucialDigital\Metamorph\Models\CoreFormInput;
+use CrucialDigital\Metamorph\Http\Requests\StoreMetamorphFormInputRequest;
+use CrucialDigital\Metamorph\Models\MetamorphFormInput;
 use Illuminate\Http\JsonResponse;
 
-class CoreFormInputController extends Controller
+class MetamorphFormInputController extends Controller
 {
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreCoreFormInputRequest $request
+     * @param StoreMetamorphFormInputRequest $request
      * @return JsonResponse
      */
-    public function store(StoreCoreFormInputRequest $request): JsonResponse
+    public function store(StoreMetamorphFormInputRequest $request): JsonResponse
     {
-        $input = CoreFormInput::updateOrCreate([
+        $input = MetamorphFormInput::updateOrCreate([
             'field' => $request->input('field'),
             'form_id' => $request->input('form_id')
         ], $request->all());
@@ -29,13 +29,13 @@ class CoreFormInputController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreCoreFormInputRequest $request
+     * @param StoreMetamorphFormInputRequest $request
      * @param $id
      * @return JsonResponse
      */
-    public function update(StoreCoreFormInputRequest $request, $id): JsonResponse
+    public function update(StoreMetamorphFormInputRequest $request, $id): JsonResponse
     {
-        $input = CoreFormInput::findOrFail($id);
+        $input = MetamorphFormInput::findOrFail($id);
         $input->fill($request->all())->save();
         return response()->json($input->fresh());
     }
@@ -48,7 +48,7 @@ class CoreFormInputController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $coreFormInput = CoreFormInput::findOrFail($id);
+        $coreFormInput = MetamorphFormInput::findOrFail($id);
         $coreFormInput->delete();
         return response()->json($coreFormInput);
     }

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use CrucialDigital\Metamorph\Models\CoreForm;
-use CrucialDigital\Metamorph\Models\CoreFormInput;
+use CrucialDigital\Metamorph\Models\MetamorphForm;
+use CrucialDigital\Metamorph\Models\MetamorphFormInput;
 use Illuminate\Database\Seeder;
 
 class MetamorphSeeder extends Seeder
@@ -19,9 +19,9 @@ class MetamorphSeeder extends Seeder
         foreach ($models as $model) {
             $data = $model;
             unset($data['inputs']);
-            $form = CoreForm::updateOrCreate(['formType' => $model['formType'], 'readOnly' => true], $data);
+            $form = MetamorphForm::updateOrCreate(['formType' => $model['formType'], 'readOnly' => true], $data);
             collect($model['inputs'])->each(function ($input) use ($form) {
-                CoreFormInput::updateOrCreate([
+                MetamorphFormInput::updateOrCreate([
                     'form_id' => $form->_id,
                     'field' => $input['field']
                 ], $input);

@@ -4,7 +4,7 @@ namespace CrucialDigital\Metamorph\Http\Controllers;
 
 use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
-use CrucialDigital\Metamorph\Models\CoreForm;
+use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -36,7 +36,7 @@ class SearchController extends Controller
 
     public function export($entity, $form): Response|BinaryFileResponse|JsonResponse
     {
-        $form = CoreForm::findOrFail($form);
+        $form = MetamorphForm::findOrFail($form);
         $builder = $this->_makeBuilder($entity);
 
         if ($builder != null) {
@@ -84,25 +84,21 @@ class SearchController extends Controller
      */
     private function _makeBuilder($entity): ?Builder
     {
-        $default = config('metamorph.models.' . $entity);
-        if (!class_exists($default)) {
-            abort(404, "Entity not found !");
-        } else {
-            $default = $default::query();
-        }
+        $model = config('metamorph.models.' . $entity);
         $repository = config('metamorph.repositories.' . $entity);
 
-        if ($repository && !class_exists($repository)) {
-            abort(404, "Repository $entity does not exists !");
-        }
-
-        if ($repository && !(new $repository instanceof DataRepositoryBuilder)) {
-            abort(500, "The data repository must implement CrucialDigital\Metamorph\DataRepositoryBuilder class");
-        }
-        if ($repository) {
+        if ($repository && class_exists($repository)) {
+            if (!(new $repository instanceof DataRepositoryBuilder)) {
+                abort(500, "The data repository must implement CrucialDigital\Metamorph\DataRepositoryBuilder class");
+            }
             return (new $repository)->builder();
         }
-        return $default;
+
+        if (!class_exists($model)) {
+            abort(404, "Entity not found !");
+        }
+
+        return $model::query();
     }
 
 

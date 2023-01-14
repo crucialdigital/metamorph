@@ -7,11 +7,11 @@ use Jenssegers\Mongodb\Relations\BelongsTo;
 /**
  * @property mixed $Form
  */
-class CoreFormData extends BaseModel
+class MetamorphFormData extends BaseModel
 {
     public function Form(): BelongsTo
     {
-        return $this->belongsTo(CoreForm::class, 'form_id', '_id');
+        return $this->belongsTo(MetamorphForm::class, 'form_id', '_id');
     }
 
     public static function search(): array

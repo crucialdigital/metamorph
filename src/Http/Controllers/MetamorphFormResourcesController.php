@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Jenssegers\Mongodb\Eloquent\Model;
 
-class CoreFormResourcesController extends Controller
+class MetamorphFormResourcesController extends Controller
 {
     /**
      * @return JsonResponse

@@ -10,7 +10,7 @@ use Jenssegers\Mongodb\Relations\HasMany;
  * @property Collection $inputs
  */
 
-class CoreForm extends BaseModel
+class MetamorphForm extends BaseModel
 {
     protected $guarded = ['_id', 'inputs'];
 
@@ -24,7 +24,7 @@ class CoreForm extends BaseModel
 
     public function inputs(): HasMany
     {
-        return $this->hasMany(CoreFormInput::class, 'form_id', '_id');
+        return $this->hasMany(MetamorphFormInput::class, 'form_id', '_id');
     }
 
     public static function search(): array

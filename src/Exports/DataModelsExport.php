@@ -2,7 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Exports;
 
-use CrucialDigital\Metamorph\Models\CoreForm;
+use CrucialDigital\Metamorph\Models\MetamorphForm;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Jenssegers\Mongodb\Eloquent\Model;
@@ -16,9 +16,9 @@ class DataModelsExport implements FromCollection, ShouldQueue, WithHeadings
     use Exportable;
 
     private Collection $collection;
-    private Model|CoreForm $form;
+    private Model|MetamorphForm $form;
 
-    public function __construct(Collection $collection, Model|CoreForm $form)
+    public function __construct(Collection $collection, Model|MetamorphForm $form)
     {
         $this->form = $form;
         $this->collection = $this->form->inputs->map(function ($input) use ($collection) {

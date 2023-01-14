@@ -2,7 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Http\Requests;
 
-use CrucialDigital\Metamorph\Models\CoreForm;
+use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\Rules\GeoPointRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -28,10 +28,10 @@ class StoreMasterCrudFormRequest extends FormRequest
     public function rules(): array
     {
         $formRequest = [
-            'form_id' => ['required', 'string', 'exists:core_forms,_id'],
+            'form_id' => ['required', 'string', 'exists:metamorph_forms,_id'],
             'entity' => ['required', 'string'],
         ];
-        $inputs = CoreForm::findOrFail($this->input('form_id'))?->getAttribute('inputs') ?? [];
+        $inputs = MetamorphForm::findOrFail($this->input('form_id'))?->getAttribute('inputs') ?? [];
 
         $type_match = [
             'text' => ['string'],
@@ -89,7 +89,7 @@ class StoreMasterCrudFormRequest extends FormRequest
     public function attributes(): array
     {
         $attributes = [];
-        $inputs = CoreForm::findOrFail($this->input('form_id'))?->getAttribute('inputs') ?? [];
+        $inputs = MetamorphForm::findOrFail($this->input('form_id'))?->getAttribute('inputs') ?? [];
         foreach ($inputs as $input) {
             $attributes[$input['field']] = Str::lower($input['name']);
         }

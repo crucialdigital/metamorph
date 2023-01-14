@@ -2,14 +2,14 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
-use CrucialDigital\Metamorph\Http\Requests\StoreCoreFormRequest;
-use CrucialDigital\Metamorph\Models\CoreForm;
+use CrucialDigital\Metamorph\Http\Requests\StoreMetamorphFormRequest;
+use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class CoreFormController extends Controller
+class MetamorphFormController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -19,7 +19,7 @@ class CoreFormController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $coreForm = CoreForm::query();
+        $coreForm = MetamorphForm::query();
         if ($request->has('type') && $request->input('type') !== null) {
             $coreForm = $coreForm->where('entity', $request->query('type'));
         }
@@ -31,13 +31,13 @@ class CoreFormController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreCoreFormRequest $request
+     * @param StoreMetamorphFormRequest $request
      * @return JsonResponse
      */
-    public function store(StoreCoreFormRequest $request): JsonResponse
+    public function store(StoreMetamorphFormRequest $request): JsonResponse
     {
 
-        $form = CoreForm::updateOrCreate([
+        $form = MetamorphForm::updateOrCreate([
             'name' => $request->input('name'),
             'entity' => $request->input('entity'),
             'owner_id' => Auth::id()
@@ -59,19 +59,19 @@ class CoreFormController extends Controller
      */
     public function show($id): JsonResponse
     {
-        return response()->json(CoreForm::findOrFail($id));
+        return response()->json(MetamorphForm::findOrFail($id));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param StoreCoreFormRequest $request
+     * @param StoreMetamorphFormRequest $request
      * @param $id
      * @return JsonResponse
      */
-    public function update(StoreCoreFormRequest $request, $id): JsonResponse
+    public function update(StoreMetamorphFormRequest $request, $id): JsonResponse
     {
-        $coreForm = CoreForm::query()->findOrFail($id);
+        $coreForm = MetamorphForm::query()->findOrFail($id);
         $coreForm->update($request->only(['name', 'visibility', 'owners', 'readOnly']));
         return response()->json($request->all());
     }
@@ -84,7 +84,7 @@ class CoreFormController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $coreForm = CoreForm::findOrFail($id);
+        $coreForm = MetamorphForm::findOrFail($id);
         $coreForm->delete();
         return response()->json($coreForm);
     }
