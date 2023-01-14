@@ -3,14 +3,14 @@
 namespace CrucialDigital\Metamorph;
 
 use Countable;
-use CrucialDigital\Metamorph\Models\CoreForm;
+use CrucialDigital\Metamorph\Models\MetamorphForm;
 use Illuminate\Http\Request;
 
 class Metamorph
 {
     public static function mapFormRequestData(Countable|array $form_data): array
     {
-        $form = CoreForm::findOrFail($form_data['form_id']);
+        $form = MetamorphForm::findOrFail($form_data['form_id']);
 
         $form_inputs = $form['inputs'];
         if (!isset($form_data)) return [];
@@ -35,7 +35,7 @@ class Metamorph
     public static function mapFormRequestFiles(Request $request, string $entity_id, string $form_id): array
     {
         $return = [];
-        $form = CoreForm::find($form_id);
+        $form = MetamorphForm::find($form_id);
         if (!isset($form)) return $return;
         $form_inputs = $form['inputs'] ?? [];
 
@@ -59,7 +59,7 @@ class Metamorph
 
     public static function mergeFormFields($entity, array $default = []): array
     {
-        $forms = CoreForm::query()->where('formType', $entity)->get(['inputs']);
+        $forms = MetamorphForm::query()->where('formType', $entity)->get(['inputs']);
         $fields = ['_id', ...$default];
         foreach ($forms as $form) {
             if (isset($form['inputs'])) {

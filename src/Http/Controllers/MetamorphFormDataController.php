@@ -5,12 +5,12 @@ namespace CrucialDigital\Metamorph\Http\Controllers;
 
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterCrudFormRequest;
 use CrucialDigital\Metamorph\Metamorph;
-use CrucialDigital\Metamorph\Models\CoreFormData;
+use CrucialDigital\Metamorph\Models\MetamorphFormData;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class CoreFormDataController extends Controller
+class MetamorphFormDataController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -20,7 +20,7 @@ class CoreFormDataController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $coreFormData = CoreFormData::query();
+        $coreFormData = MetamorphFormData::query();
         $form = $request->query('form');
         $rejected = (bool)$request->query('rejected');
 
@@ -47,7 +47,7 @@ class CoreFormDataController extends Controller
 
         $data = Metamorph::mapFormRequestData($request->all());
         $data['rejected'] = false;
-        $entity = CoreFormData::create($data);
+        $entity = MetamorphFormData::create($data);
         $entity?->fill(Metamorph::mapFormRequestFiles($request, $entity->_id, $request->input('form_id')))->save();
 
         return response()->json($entity->fresh());
@@ -61,7 +61,7 @@ class CoreFormDataController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $coreFormData = CoreFormData::find($id);
+        $coreFormData = MetamorphFormData::find($id);
         return response()->json($coreFormData);
     }
 
@@ -74,7 +74,7 @@ class CoreFormDataController extends Controller
      */
     public function update(StoreMasterCrudFormRequest $request, $id): JsonResponse
     {
-        $coreFormData = CoreFormData::findOrFail($id);
+        $coreFormData = MetamorphFormData::findOrFail($id);
         $data = Metamorph::mapFormRequestData($request->all());
         $data['rejected'] = false;
         $coreFormData = $coreFormData->fill($data);
@@ -90,7 +90,7 @@ class CoreFormDataController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $coreFormData = CoreFormData::find($id);
+        $coreFormData = MetamorphFormData::find($id);
         $coreFormData->delete();
         return response()->json($coreFormData);
     }
@@ -107,7 +107,7 @@ class CoreFormDataController extends Controller
         $request->validate([
             'rejection_observations' => ['required', 'string', 'min:20']
         ]);
-        $coreFormData = CoreFormData::findOrFail($id);
+        $coreFormData = MetamorphFormData::findOrFail($id);
 
         $coreFormData->fill(['rejected' => true, 'rejection_observations' => $request->input('rejection_observations')])->save();
         return response()->json($coreFormData);
@@ -120,14 +120,14 @@ class CoreFormDataController extends Controller
      */
     public function validateFormData(Request $request, $id): JsonResponse
     {
-        $data = CoreFormData::findOrFail($id);
+        $data = MetamorphFormData::findOrFail($id);
         $model = config('metamorph.entity.' . $data['entity']);
         $data = array_merge($data->toArray(), $request->all());
 
         try {
             $data = $model::create($data);
             if ($data) {
-                CoreFormData::destroy($id);
+                MetamorphFormData::destroy($id);
             }
             return response()->json($data);
         } catch (\Exception $exception) {

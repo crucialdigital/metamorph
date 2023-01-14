@@ -28,12 +28,7 @@ class InstallMetamorph extends Command
      */
     public function handle(): int
     {
-        $route_dir = base_path('/routes/');
-        if (!file_exists($route_dir . 'metamorph.php') || $this->option('force')) {
-            $content = file_get_contents(__DIR__ . '/stubs/routes.stub');
-            file_put_contents($route_dir . 'metamorph.php', $content);
-            $this->alert('Route file copied !');
-        }
+        Artisan::call('metamorph:models');
         return self::SUCCESS;
     }
 }

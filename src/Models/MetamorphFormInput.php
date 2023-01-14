@@ -2,7 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Models;
 
-class CoreFormInput extends BaseModel
+class MetamorphFormInput extends BaseModel
 {
     protected $attributes = [
         'required' => false,
