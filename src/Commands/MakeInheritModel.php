@@ -3,6 +3,7 @@
 namespace CrucialDigital\Metamorph\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 
 class MakeInheritModel extends Command
@@ -12,7 +13,7 @@ class MakeInheritModel extends Command
      *
      * @var string
      */
-    protected $signature = "metamorph:make-model {name} {--S|search=['name']}, {--L|label='name'}";
+    protected $signature = "metamorph:make-model {name} {--S|search=['name']}, {--L|label='name'}, {--R|repository}";
 
     /**
      * The console command description.
@@ -45,6 +46,10 @@ class MakeInheritModel extends Command
             $content = Str::replace($search, $replace, $content);
         }
         file_put_contents($dir . Str::ucfirst($this->argument('name')) . '.php', $content);
+        if($this->option('repository')){
+            $repository_name = Str::ucfirst($this->argument('name')) . 'Repository';
+            Artisan::call('metamorph:make-repository ' . $repository_name . ' --model='. $this->argument('name'));
+        }
         $this->info('The model ' . $dir . Str::ucfirst($this->argument('name')) . ' create successfully !');
         return self::SUCCESS;
     }

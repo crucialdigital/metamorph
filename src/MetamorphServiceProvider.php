@@ -22,6 +22,12 @@ class MetamorphServiceProvider extends PackageServiceProvider
             ->name('metamorph')
             ->hasConfigFile()
             ->hasRoute('metamorph')
-            ->hasCommands([MetamorphCommand::class, MakeInheritModel::class, MakeRepository::class]);
+            ->hasCommands(
+                [
+                    MetamorphCommand::class,
+                    MakeInheritModel::class,
+                    MakeRepository::class,
+                    InstallMetamorph::class,
+                ]);
     }
 }

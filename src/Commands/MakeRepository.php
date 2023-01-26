@@ -12,7 +12,7 @@ class MakeRepository extends Command
      *
      * @var string
      */
-    protected $signature = 'metamorph:make-repository {name} {--model=""}';
+    protected $signature = 'metamorph:make-repository {name} {--model}';
 
     /**
      * The console command description.
