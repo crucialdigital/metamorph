@@ -31,7 +31,7 @@ class MetamorphFormResourcesController extends Controller
 
         try {
             $data = $models::query();
-            $data = $this->load($request, $data, $models::search(), $models::label());
+            $data = $this->load($request, $data, $models::search());
 
             return response()->json($this->transform($data, $models::label()));
         } catch (Exception $exception) {
@@ -43,11 +43,10 @@ class MetamorphFormResourcesController extends Controller
      * @param Request $request
      * @param $builder
      * @param array $search
-     * @param string $label
      * @return \Illuminate\Database\Eloquent\Collection|LengthAwarePaginator|array
      */
 
-    private function load(Request $request, $builder, array $search = [], string $label = '*'): Collection|LengthAwarePaginator|array
+    private function load(Request $request, $builder, array $search = []): Collection|LengthAwarePaginator|array
     {
         if ($request->has('term') && $request->input('term') != null) {
             $query = [];
@@ -57,7 +56,7 @@ class MetamorphFormResourcesController extends Controller
             $request->merge(['search' => $query]);
         }
         $request->query->add(['paginate' => false]);
-        return (new ResourceQueryLoader($builder))->load([$label]);
+        return (new ResourceQueryLoader($builder))->load($search);
     }
 
     /**

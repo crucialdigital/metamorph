@@ -29,9 +29,18 @@ class StoreMasterCrudFormRequest extends FormRequest
     {
         $formRequest = [
             'form_id' => ['required', 'string', 'exists:metamorph_forms,_id'],
-            'entity' => ['required', 'string'],
         ];
-        $inputs = MetamorphForm::findOrFail($this->input('form_id'))?->getAttribute('inputs') ?? [];
+        $form = MetamorphForm::findOrFail($this->input('form_id'));
+        $inputs = [];
+
+        if ($form && $form->getAttribute('inputs')) {
+            $inputs = $form->getAttribute('inputs');
+        } else {
+            abort(422, 'No field found !');
+        }
+
+        $this->merge(['entity' => $form->getAttribute('entity')]);
+
 
         $type_match = [
             'text' => ['string'],

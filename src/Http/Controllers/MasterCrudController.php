@@ -4,6 +4,7 @@ namespace CrucialDigital\Metamorph\Http\Controllers;
 
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterCrudFormRequest;
 use CrucialDigital\Metamorph\Metamorph;
+use CrucialDigital\Metamorph\Models\MetamorphForm;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,8 +45,32 @@ class MasterCrudController extends Controller
      */
     public function show(string $model, string $id): JsonResponse
     {
-        $entity = config('metamorph.models.' . $model)::findOrFail($id);
-        return response()->json($entity);
+        /**
+         * @var array $data
+         */
+        $data = config('metamorph.models.' . $model)::findOrFail($id);
+
+        $form = MetamorphForm::query()->where('entity', $model)->latest()->first();
+        $inputs = $form?->getAttribute('inputs');
+        if ($inputs) {
+            $metas = collect($inputs)
+                ->filter(function ($input) {
+                    return in_array($input['type'], ['resource', 'multiresource']);
+                })->map(function ($el) use ($data) {
+                    try {
+                        $res = config('metamorph.models.' . $el['entity'])::find($data[$el['field']]);
+                    } catch (\Exception $e) {
+                        $res = null;
+                    }
+                    return [
+                        'label' => $el['field'],
+                        'value' => $res ? $res->getAttribute(config('metamorph.models.' . $el['entity'])::label()) : ''
+                    ];
+                });
+
+            $data['meta_data'] = array_values($metas->toArray());
+        }
+        return response()->json($data);
     }
 
     /**
