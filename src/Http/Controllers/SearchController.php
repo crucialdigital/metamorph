@@ -95,7 +95,7 @@ class SearchController extends Controller
         }
 
         if (!class_exists($model)) {
-            abort(404, "Entity not found !");
+            abort(404, "Model not found !");
         }
 
         return $model::query();

@@ -33,9 +33,10 @@ class MetamorphCommand extends Command
             $model = json_decode($content, true);
             if (isset($model['ref'])) {
                 $form = MetamorphForm::updateOrCreate(['ref' => $model['ref']], $model);
+                $form->inputs()->delete();
                 collect($model['inputs'] ?? [])->each(function ($input) use ($form) {
                     if(isset($input['field']) && $form){
-                        MetamorphFormInput::updateOrCreate(['field' => $input['field'], 'form_id' => $form->_id], $input);
+                        MetamorphFormInput::create(['field' => $input['field'], 'form_id' => $form->_id, ...$input]);
                     }
                 });
             }
