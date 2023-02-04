@@ -65,7 +65,7 @@
     "extra": {
         "laravel": {
             "providers": [
-              "CrucialDigital\\Metamorph\\MetamorphServiceProvider"
+                "CrucialDigital\\Metamorph\\MetamorphServiceProvider"
             ],
             "aliases": {
                 "Metamorph": "Metamorph"

@@ -5,24 +5,29 @@ namespace CrucialDigital\Metamorph\Exports;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Jenssegers\Mongodb\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class DataModelsExport implements FromCollection, ShouldQueue, WithHeadings
+class DataModelsExport implements FromCollection, WithHeadings
 {
 
     use Exportable;
 
     private Collection $collection;
-    private Model|MetamorphForm $form;
+    private MetamorphForm $form;
 
-    public function __construct(Collection $collection, Model|MetamorphForm $form)
+    public function __construct(Collection $collection, $form)
     {
         $this->form = $form;
-        $this->collection = $this->form->inputs->map(function ($input) use ($collection) {
-            return $collection[$input['field']];
+        $this->collection = $collection->map(function ($data) use ($form){
+            $prepared = [];
+            $form->inputs->each(function ($input) use (&$prepared, $data){
+                $prepared[$input['field']] = $data[$input['field']];
+            });
+            return $prepared;
         });
 
     }
