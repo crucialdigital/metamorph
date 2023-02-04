@@ -3,7 +3,7 @@
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
 
-use CrucialDigital\Metamorph\Http\Requests\StoreMasterCrudFormRequest;
+use CrucialDigital\Metamorph\Http\Requests\StoreMasterStoreFormRequest;
 use CrucialDigital\Metamorph\Metamorph;
 use CrucialDigital\Metamorph\Models\MetamorphFormData;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
@@ -39,10 +39,10 @@ class MetamorphFormDataController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreMasterCrudFormRequest $request
+     * @param StoreMasterStoreFormRequest $request
      * @return JsonResponse
      */
-    public function store(StoreMasterCrudFormRequest $request): JsonResponse
+    public function store(StoreMasterStoreFormRequest $request): JsonResponse
     {
 
         $data = Metamorph::mapFormRequestData($request->all());
@@ -68,11 +68,11 @@ class MetamorphFormDataController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param StoreMasterCrudFormRequest $request
+     * @param StoreMasterStoreFormRequest $request
      * @param $id
      * @return JsonResponse
      */
-    public function update(StoreMasterCrudFormRequest $request, $id): JsonResponse
+    public function update(StoreMasterStoreFormRequest $request, $id): JsonResponse
     {
         $coreFormData = MetamorphFormData::findOrFail($id);
         $data = Metamorph::mapFormRequestData($request->all());

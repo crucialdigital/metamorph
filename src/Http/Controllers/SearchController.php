@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -40,8 +41,9 @@ class SearchController extends Controller
         $builder = $this->_makeBuilder($entity);
 
         if ($builder != null) {
-            return (new DataModelsExport((new ResourceQueryLoader($builder))->load(), $form))
-                ->download($entity . '.xlsx', Excel::XLSX);
+            $data = (new ResourceQueryLoader($builder))->load();
+            return (new DataModelsExport($data, $form))
+                ->download($entity . '.csv', Excel::CSV);
         } else {
             return response()->json(null, 404);
         }

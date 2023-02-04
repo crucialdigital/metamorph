@@ -3,11 +3,12 @@
 namespace CrucialDigital\Metamorph\Models;
 
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
-use Jenssegers\Mongodb\Relations\HasMany;
 
 /**
  * @property Collection $inputs
+ * @property string $entity
  */
 
 class MetamorphForm extends BaseModel

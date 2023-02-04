@@ -2,7 +2,8 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
-use CrucialDigital\Metamorph\Http\Requests\StoreMasterCrudFormRequest;
+use CrucialDigital\Metamorph\Http\Requests\StoreMasterStoreFormRequest;
+use CrucialDigital\Metamorph\Http\Requests\StoreMasterUpdateFormRequest;
 use CrucialDigital\Metamorph\Metamorph;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use Illuminate\Http\JsonResponse;
@@ -14,11 +15,11 @@ class MasterCrudController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreMasterCrudFormRequest $request
+     * @param StoreMasterStoreFormRequest $request
      * @param string $model
      * @return JsonResponse
      */
-    public function store(StoreMasterCrudFormRequest $request, string $model): JsonResponse
+    public function store(StoreMasterStoreFormRequest $request, string $model): JsonResponse
     {
 
         $formData = Metamorph::mapFormRequestData($request->all());
@@ -76,12 +77,12 @@ class MasterCrudController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param StoreMasterCrudFormRequest $request
+     * @param StoreMasterUpdateFormRequest $request
      * @param string $model
      * @param string $id
      * @return JsonResponse
      */
-    public function update(StoreMasterCrudFormRequest $request, string $model, string $id): JsonResponse
+    public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
         $entity = config('metamorph.models.' . $model)::findOrFail($id);
         $data = $request->all();

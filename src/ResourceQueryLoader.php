@@ -3,7 +3,6 @@
 
 namespace CrucialDigital\Metamorph;
 
-
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -26,10 +25,8 @@ class ResourceQueryLoader
         $paginate = (bool)request()->query('paginate', true);
         $ownership = request()->query('ownership');
 
-        $search = request()->input('search');
-        if ($search) {
-            $this->search($search);
-        }
+        $search = request()->input('search', []);
+        $this->search($search);
         $filters = request()->input('filters');
         if ($filters) {
             $this->filter($filters);
@@ -76,6 +73,21 @@ class ResourceQueryLoader
                 }
             });
         }
+        $term = request()->query('term');
+        if (isset($term)) {
+            $columns = $this->builder->getModel()::class::search() ?? [];
+            if (count($columns)) {
+                $this->builder->where(function (Builder $query) use ($columns, $term) {
+                    foreach ($columns as $k => $column) {
+                        if ($k == 0) {
+                            $query->where($column, 'LIKE', '%' . $term . '%');
+                        } else {
+                            $query->orWhere($column, 'LIKE', '%' . $term . '%');
+                        }
+                    }
+                });
+            }
+        }
     }
 
     /**
@@ -84,8 +96,8 @@ class ResourceQueryLoader
      */
     private function filter($filters)
     {
-        $queries = (!is_array($filters)) ? json_decode($filters, true) : $filters;
-        if ($queries != null && count($queries) > 0) {
+        $queries = (!is_array($filters)) ? json_decode($filters, false) : $filters;
+        if ($queries !== null && count($queries) > 0) {
             $this->builder = $this->builder->where(function (Builder $builder) use ($queries) {
                 foreach ($queries as $query) {
                     $field = $query['field'] ?? null;
@@ -94,7 +106,7 @@ class ResourceQueryLoader
                     if ($field != null) {
                         if ($field != '_id') {
                             if (Str::upper($operator) == 'LIKE') {
-                                $builder->where($field, $operator, '%' . $value . '%');
+                                $builder->where($field, 'LIKE', '%' . $value . '%');
                             } else {
                                 $builder->where($field, $operator, $value);
                             }

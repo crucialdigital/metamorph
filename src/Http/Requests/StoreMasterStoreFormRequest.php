@@ -7,7 +7,7 @@ use CrucialDigital\Metamorph\Rules\GeoPointRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
-class StoreMasterCrudFormRequest extends FormRequest
+class StoreMasterStoreFormRequest extends FormRequest
 {
 
     /**
