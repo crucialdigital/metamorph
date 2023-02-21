@@ -1,6 +1,9 @@
 <?php
 
 namespace CrucialDigital\Metamorph\Models;
+/**
+ * @property string $type
+ */
 
 class MetamorphFormInput extends BaseModel
 {

@@ -15,11 +15,19 @@ use Jenssegers\Mongodb\Eloquent\Model;
  */
 abstract class BaseModel extends Model
 {
+
     protected $guarded = ['_id'];
     protected $appends = ['id'];
 
     protected $dates = ['created_at', 'update_at'];
 
     public static abstract function search(): array;
+
     public static abstract function label(): string;
+
+    public static function extraFields(): array
+    {
+        return [];
+    }
+
 }
