@@ -69,12 +69,16 @@ class SearchController extends Controller
                 $entity = $set['entity'];
                 $field = $set['field'];
 
-                $data = $this->_makeBuilder($entity)?->whereIn('_id', $value)->get();
-
-                $resources[$field] = implode(', ', $data?->map(function ($res) use ($entity) {
-                        $res = $res->toArray();
-                        return $res[config('metamorph.models.' . $entity)::label()] ?? '----';
-                    })?->toArray() ?? []);
+                $data = $this->_makeBuilder($entity)?->whereIn('_id', $value)->get()->toArray();
+                $data = collect($data)->map(function ($res) use ($entity) {
+                    $model = config('metamorph.models.' . $entity);
+                    if(class_exists($model) && method_exists($model, 'label')){
+                        return $res[config('metamorph.models.' . $entity)::label()];
+                    }else {
+                        return '----';
+                    }
+                });
+                $resources[$field] = implode(', ', $data->toArray());
             }
         }
         return response()->json($resources);

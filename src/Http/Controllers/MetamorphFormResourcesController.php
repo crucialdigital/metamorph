@@ -27,15 +27,13 @@ class MetamorphFormResourcesController extends Controller
     public function fetchResources(Request $request, $entity): JsonResponse
     {
 
-        $models = config('metamorph.models.' . $entity);
-
-        try {
-            $data = $models::query();
-            $data = $this->load($request, $data, $models::search());
-
-            return response()->json($this->transform($data, $models::label()));
-        } catch (Exception $exception) {
-            return response()->json($exception->getMessage());
+        $model = config('metamorph.models.' . $entity);
+        if (class_exists($model) && method_exists($model, 'label')) {
+            $data = $model::query();
+            $data = $this->load($request, $data, $model::search());
+            return response()->json($this->transform($data, $model::label()));
+        } else {
+            return response()->json([]);
         }
     }
 
@@ -77,7 +75,7 @@ class MetamorphFormResourcesController extends Controller
     private function getAttribute(Model $model, $key)
     {
         if (!Str::contains($key, '.')) {
-            return $model->toArray()[$key] ?? '';
+            return $model->toArray()[$key] ?? '-';
         } else {
             $value = $model->toArray();
             $parts = explode('.', $key);

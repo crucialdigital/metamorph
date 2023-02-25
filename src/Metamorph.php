@@ -12,9 +12,9 @@ class Metamorph
     {
         $form = MetamorphForm::findOrFail($form_data['form_id']);
 
-        $form_inputs = $form['inputs'];
-        if (!isset($form_data)) return [];
+        $extras = config('metamorph.models.' . $form_data['entity'])::extraFields() ?? [];
 
+        $form_inputs = $form['inputs'];
 
         $rtr = ['form_id' => $form->getAttribute('_id')];
         $rtr['entity'] = $form_data['entity'];
@@ -27,6 +27,10 @@ class Metamorph
                 && $self_input['type'] != 'photo'
                 && isset($datum)) {
                 $rtr[$k] = $datum;
+            } else {
+                if (in_array($k, $extras)) {
+                    $rtr[$k] = $datum;
+                }
             }
         }
         return $rtr;
@@ -37,7 +41,7 @@ class Metamorph
         $return = [];
         $form = MetamorphForm::find($form_id);
         if (!isset($form)) return $return;
-        $form_inputs = $form['inputs'] ?? [];
+        $form_inputs = $form->inputs()->whereIn('type', ['file', 'photo'])->get();
 
         foreach ($form_inputs as $input) {
             if (isset($input['field']) && isset($input['type']) && in_array($input['type'], ['file', 'photo'])) {

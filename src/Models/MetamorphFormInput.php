@@ -1,6 +1,9 @@
 <?php
 
 namespace CrucialDigital\Metamorph\Models;
+/**
+ * @property string $type
+ */
 
 class MetamorphFormInput extends BaseModel
 {
@@ -8,10 +11,7 @@ class MetamorphFormInput extends BaseModel
         'required' => false,
         'type' => 'text'
     ];
-    protected $fillable = [
-        'field', 'name', 'label', 'placeholder', 'type', 'options', 'entity', 'width',
-        'default', 'required', 'readOnly', 'depends', 'operator', 'needle', 'form_id'
-    ];
+    protected $guarded = ['_id', 'id'];
 
     public static function search(): array
     {

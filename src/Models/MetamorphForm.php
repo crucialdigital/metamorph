@@ -22,17 +22,25 @@ class MetamorphForm extends BaseModel
         'readOnly' => 'boolean',
     ];
 
-
+    /**
+     * @return HasMany
+     */
     public function inputs(): HasMany
     {
         return $this->hasMany(MetamorphFormInput::class, 'form_id', '_id');
     }
 
+    /**
+     * @return string[]
+     */
     public static function search(): array
     {
         return ['name', 'entity'];
     }
 
+    /**
+     * @return string
+     */
     public static function label(): string
     {
         return 'name';
