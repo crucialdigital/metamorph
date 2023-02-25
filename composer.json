@@ -70,9 +70,6 @@
             "aliases": {
                 "Metamorph": "Metamorph"
             }
-        },
-        "branch-alias": {
-            "dev-master": "1.0.0"
         }
     },
     "minimum-stability": "stable",
