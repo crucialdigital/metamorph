@@ -9,7 +9,7 @@ use CrucialDigital\Metamorph\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api/metamorph')->middleware(['api'])->group(function () {
-    Route::middleware(config('metamorph.middleware'))->group(function (){
+    Route::middleware(config('metamorph.middleware'))->group(function () {
         Route::post('/search/{entity}', [SearchController::class, 'search']);
         Route::post('/many/search', [SearchController::class, 'findAll']);
         Route::post('/exports/{entity}/{form}', [SearchController::class, 'export']);
@@ -17,10 +17,6 @@ Route::prefix('api/metamorph')->middleware(['api'])->group(function () {
         Route::apiResource('/forms', MetamorphFormController::class);
         Route::apiResource('/form-data', MetamorphFormDataController::class);
         Route::apiResource('/form-inputs', MetamorphFormInputController::class)->except(['index']);
-        Route::prefix('resources')->group(function () {
-            Route::post('/entities', [MetamorphFormResourcesController::class, 'entities']);
-            Route::post('/entity/{name}', [MetamorphFormResourcesController::class, 'fetchResources']);
-        });
         Route::post('/validate/form-data/{id}', [MetamorphFormDataController::class, 'validateFormData']);
         Route::patch('/reject/form-data/{id}', [MetamorphFormDataController::class, 'rejectFormData']);
 
@@ -28,5 +24,9 @@ Route::prefix('api/metamorph')->middleware(['api'])->group(function () {
         Route::apiResource('/master/{entity}', MasterCrudController::class)->except(['index'])->parameters([
             '{entity}' => 'id'
         ]);
+    });
+    Route::prefix('resources')->group(function () {
+        Route::post('/entities', [MetamorphFormResourcesController::class, 'entities']);
+        Route::post('/entity/{name}', [MetamorphFormResourcesController::class, 'fetchResources']);
     });
 });
