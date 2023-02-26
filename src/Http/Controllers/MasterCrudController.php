@@ -12,6 +12,26 @@ use Illuminate\Support\Facades\Auth;
 
 class MasterCrudController extends Controller
 {
+
+    public function __construct()
+    {
+        $model = request()->route('entity');
+        $middlewares = config('metamorph.models_middleware', []);
+        if (isset($middlewares[$model])) {
+            foreach ($middlewares[$model] as $middleware => $only) {
+                if (is_string($only) && $only == '*') {
+                    if (class_exists($middleware)) {
+                        $this->middleware($middleware);
+                    }
+                } else {
+                    if(class_exists($middleware) && is_array($only)){
+                        $this->middleware($middleware)->only($only);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Store a newly created resource in storage.
      *
