@@ -5,6 +5,7 @@ namespace CrucialDigital\Metamorph;
 use Countable;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class Metamorph
 {
@@ -44,6 +45,10 @@ class Metamorph
         $form_inputs = $form->inputs()->whereIn('type', ['file', 'photo'])->get();
 
         foreach ($form_inputs as $input) {
+            if( is_string($input['field'])){
+                $return[$input['field']] = $input['field'];
+                continue;
+            }
             if (isset($input['field']) && isset($input['type']) && in_array($input['type'], ['file', 'photo'])) {
                 if ($request->hasFile($input['field']) && $request->file($input['field'])->isValid()) {
                     $path = $form['formType'] . '/' . $input['field'] . '/';
