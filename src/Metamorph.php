@@ -45,7 +45,7 @@ class Metamorph
         $form_inputs = $form->inputs()->whereIn('type', ['file', 'photo'])->get();
 
         foreach ($form_inputs as $input) {
-            if( is_string($input['field'])){
+            if(isset($input['field']) && is_string($request->input($input['field']))){
                 $return[$input['field']] = $request->input($input['field']);
                 continue;
             }
