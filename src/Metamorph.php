@@ -46,7 +46,7 @@ class Metamorph
 
         foreach ($form_inputs as $input) {
             if( is_string($input['field'])){
-                $return[$input['field']] = $input['field'];
+                $return[$input['field']] = $request->input($input['field']);
                 continue;
             }
             if (isset($input['field']) && isset($input['type']) && in_array($input['type'], ['file', 'photo'])) {
