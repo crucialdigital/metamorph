@@ -73,7 +73,6 @@
         },
         "branch-alias": {
             "dev": "0.0.9-dev",
-            "master": "0.0.9",
             "update": "dev-dev"
         }
     },
