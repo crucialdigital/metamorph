@@ -7,5 +7,5 @@ use \Illuminate\Database\Eloquent\Builder;
 
 abstract class DataRepositoryBuilder
 {
-    public abstract function builder(): Builder;
+    public abstract function builder(): ?Builder;
 }

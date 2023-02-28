@@ -6,14 +6,13 @@ namespace CrucialDigital\Metamorph;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class ResourceQueryLoader
 {
-    protected Builder $builder;
+    protected Builder|null $builder;
 
-    public function __construct(Builder $builder)
+    public function __construct(?Builder $builder)
     {
         $this->builder = $builder;
 
@@ -21,25 +20,19 @@ class ResourceQueryLoader
 
     public function load($columns = ['*']): Collection|LengthAwarePaginator|array
     {
+        if (!($this->builder instanceof Builder)) {
+            return [];
+        }
         $per_page = (int)request()->query('per_page', 15);
         $paginate = (bool)request()->query('paginate', true);
         $ownership = request()->query('ownership');
 
         $search = request()->input('search', []);
         $this->search($search);
-        $filters = request()->input('filters');
+        $filters = request()->input('filters', []);
         if ($filters) {
             $this->filter($filters);
         }
-
-        if ($ownership && $ownership != '') {
-            $user = Auth::user();
-            $this->builder = $this->builder->where(function (Builder $b) use ($ownership, $user) {
-                $b->where($ownership, Auth::id())->orWhere($ownership, $user['actor_id']);
-            });
-        }
-
-
         return $paginate ? $this->builder->orderByDesc('created_at')->paginate($per_page, $columns)
             : $this->builder->orderByDesc('created_at')->get($columns);
     }
