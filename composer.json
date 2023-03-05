@@ -19,7 +19,7 @@
         "php": "^8.0|^8.1",
         "illuminate/contracts": "^9.40|^10",
         "illuminate/support": "^9.40|^10",
-        "jenssegers/mongodb": "^3.9",
+        "jenssegers/mongodb": "dev-master",
         "maatwebsite/excel": "^3.1",
         "psr/simple-cache": "^2.0",
         "spatie/laravel-package-tools": "^1.13.0"
