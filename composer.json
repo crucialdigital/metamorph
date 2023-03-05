@@ -76,6 +76,6 @@
             "update": "dev-dev"
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }
