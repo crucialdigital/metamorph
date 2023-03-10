@@ -36,7 +36,7 @@ return [
 
 
     /*
-     * Middleware for model routes
+     * Prefix for model routes
      */
 
     'route_prefix' => 'metamorph',
