@@ -26,13 +26,20 @@ return [
      * Middleware for all routes
      */
 
-    'middleware' => [],
+    'middlewares' => [],
 
     /*
      * Middleware for model routes
      */
 
-    'models_middleware' => [],
+    'model_middlewares' => [],
+
+
+    /*
+     * Middleware for model routes
+     */
+
+    'route_prefix' => 'metamorph',
 
     /*
      * Resources are data models created and that we use for another purpose
