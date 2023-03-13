@@ -9,6 +9,8 @@ use Illuminate\Support\Collection;
 /**
  * @property Collection $inputs
  * @property string $entity
+ * @property bool $readOnly
+ * @property string $formType
  */
 
 class MetamorphForm extends BaseModel
