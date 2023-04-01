@@ -43,7 +43,6 @@ class MasterCrudController extends Controller
     {
 
         $formData = Metamorph::mapFormRequestData($request->all());
-        $formData['agent_id'] = Auth::id();
 
         $entity = config('metamorph.models.' . $model)::create($formData);
 
