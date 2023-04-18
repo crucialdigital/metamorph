@@ -23,10 +23,23 @@ return [
     'repository_dir' => app_path('Repositories'),
 
     /*
-     * Middleware for routes
+     * Middleware for all routes
      */
 
-    'middleware' => [],
+    'middlewares' => [],
+
+    /*
+     * Middleware for model routes
+     */
+
+    'model_middlewares' => [],
+
+
+    /*
+     * Prefix for model routes
+     */
+
+    'route_prefix' => 'metamorph',
 
     /*
      * Resources are data models created and that we use for another purpose

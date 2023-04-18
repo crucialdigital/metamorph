@@ -16,6 +16,24 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SearchController extends Controller
 {
+    public function __construct()
+    {
+        $model = request()->route('entity');
+        $middlewares = config('metamorph.model_middlewares', []);
+        if (isset($middlewares[$model])) {
+            foreach ($middlewares[$model] as $middleware => $only) {
+                if (is_string($only) && $only == '*') {
+                    if (class_exists($middleware)) {
+                        $this->middleware($middleware);
+                    }
+                } else {
+                    if (class_exists($middleware) && is_array($only) && in_array('index', $only)) {
+                        $this->middleware($middleware)->only(['search', 'export']);
+                    }
+                }
+            }
+        }
+    }
 
     public function search($entity): JsonResponse
     {
@@ -72,9 +90,9 @@ class SearchController extends Controller
                 $data = $this->_makeBuilder($entity)?->whereIn('_id', $value)->get()->toArray();
                 $data = collect($data)->map(function ($res) use ($entity) {
                     $model = config('metamorph.models.' . $entity);
-                    if(class_exists($model) && method_exists($model, 'label')){
+                    if (class_exists($model) && method_exists($model, 'label')) {
                         return $res[config('metamorph.models.' . $entity)::label()];
-                    }else {
+                    } else {
                         return '----';
                     }
                 });
