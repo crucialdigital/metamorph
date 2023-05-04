@@ -75,7 +75,7 @@ class MasterCrudController extends Controller
         if ($inputs) {
             $metas = collect($inputs)
                 ->filter(function ($input) {
-                    return in_array($input['type'], ['resource', 'multiresource']);
+                    return in_array($input['type'], ['resource', 'multiresource', 'selectresource']);
                 })->map(function ($el) use ($data) {
                     try {
                         $res = config('metamorph.models.' . $el['entity'])::find($data[$el['field']]);
