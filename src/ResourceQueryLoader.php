@@ -5,12 +5,13 @@ namespace CrucialDigital\Metamorph;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Expression;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class ResourceQueryLoader
 {
-    protected Builder|null $builder;
+    protected Builder|\MongoDB\Laravel\Eloquent\Builder|null $builder;
 
     public function __construct(?Builder $builder)
     {
@@ -18,14 +19,21 @@ class ResourceQueryLoader
 
     }
 
-    public function load($columns = ['*']): Collection|LengthAwarePaginator|array
+    public function load($columns = ['*']): LengthAwarePaginator|array|Expression|Collection
     {
         if (!($this->builder instanceof Builder)) {
             return [];
         }
         $per_page = (int)request()->query('per_page', 15);
+
+        $order_by = request()->query('order_by', 'created_at');
+        $order_direction = request()->query('order_direction', 'DESC');
+
         $paginate = (bool)request()->query('paginate', true);
-        $ownership = request()->query('ownership');
+        $randomize = (bool)request()->query('randomize', false);
+        $with = is_array(request()->input('relations'))
+            ? request()->input('relations')
+            : null;
 
         $search = request()->input('search', []);
         $this->search($search);
@@ -33,8 +41,27 @@ class ResourceQueryLoader
         if ($filters) {
             $this->filter($filters);
         }
-        return $paginate ? $this->builder->orderByDesc('created_at')->paginate($per_page, $columns)
-            : $this->builder->orderByDesc('created_at')->get($columns);
+        $this->builder->orderBy($order_by, $order_direction);
+
+        if ($randomize) {
+            $data = $this->builder->raw(function ($collection) use ($per_page) {
+                return $collection->aggregate([
+                    [
+                        '$sample' => [
+                            'size' => $per_page
+                        ]
+                    ],
+                ]);
+            });
+            if($with != null) $data = $data->load($with);
+            return $data;
+        }else{
+            if($with != null) $this->builder = $this->builder->with($with);
+        }
+
+        return $paginate
+            ? $this->builder->paginate($per_page, $columns)
+            : $this->builder->get($columns);
     }
 
 

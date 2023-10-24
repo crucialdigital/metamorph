@@ -3,7 +3,8 @@
 namespace CrucialDigital\Metamorph;
 
 
-use \Illuminate\Database\Eloquent\Builder;
+
+use MongoDB\Laravel\Eloquent\Builder;
 
 abstract class DataRepositoryBuilder
 {

@@ -5,7 +5,7 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/crucialdigital/metamorph/Fix%20PHP%20code%20style%20issues?label=code%20style)](https://github.com/crucialdigital/metamorph/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/crucialdigital/metamorph.svg?style=flat-square)](https://packagist.org/packages/crucialdigital/metamorph)
 
-Metamorph is a Laravel package that implement a data model system based on mongodb. This package provide a system form creating and managing laravel models dynamicaly even in runtype
+Metamorph is a Laravel package that implements a data model system based on mongodb. This package provides a system for creating and managing laravel models dynamicaly even in runtype
 
 ## Installation
 
@@ -30,10 +30,7 @@ php artisan vendor:publish --tag="metamorph-config"
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+BUTING.md) for details.
 
 ## Security Vulnerabilities
 
@@ -43,7 +40,6 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 - [Humbert DJAGLO](https://www.facebook.com/humbert.djaglo)
 - [Mawaba BOTOSSI](https://www.facebook.com/tbotossi)
-- [All Contributors](../../contributors)
 
 ## License
 

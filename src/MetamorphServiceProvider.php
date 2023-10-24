@@ -3,6 +3,7 @@
 namespace CrucialDigital\Metamorph;
 
 use CrucialDigital\Metamorph\Commands\InstallMetamorph;
+use CrucialDigital\Metamorph\Commands\MakeDataModel;
 use CrucialDigital\Metamorph\Commands\MakeInheritModel;
 use CrucialDigital\Metamorph\Commands\MakeRepository;
 use CrucialDigital\Metamorph\Commands\MetamorphCommand;
@@ -28,6 +29,7 @@ class MetamorphServiceProvider extends PackageServiceProvider
                     MakeInheritModel::class,
                     MakeRepository::class,
                     InstallMetamorph::class,
+                    MakeDataModel::class
                 ]);
     }
 }

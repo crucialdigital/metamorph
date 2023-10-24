@@ -19,7 +19,7 @@ class MetamorphFormController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $coreForm = MetamorphForm::query();
+        $coreForm = MetamorphForm::where('_id', 'exists', true);
         if ($request->has('type') && $request->input('type') !== null) {
             $coreForm = $coreForm->where('entity', $request->query('type'));
         }
@@ -71,7 +71,7 @@ class MetamorphFormController extends Controller
      */
     public function update(StoreMetamorphFormRequest $request, $id): JsonResponse
     {
-        $coreForm = MetamorphForm::query()->findOrFail($id);
+        $coreForm = MetamorphForm::findOrFail($id);
         $coreForm->update($request->only(['name', 'visibility', 'owners', 'readOnly']));
         return response()->json($request->all());
     }
@@ -87,5 +87,17 @@ class MetamorphFormController extends Controller
         $coreForm = MetamorphForm::findOrFail($id);
         $coreForm->delete();
         return response()->json($coreForm);
+    }
+
+    /**
+     * @param $entity
+     * @return JsonResponse
+     */
+    public function get_form_by_entity($entity): JsonResponse
+    {
+        $form = MetamorphForm::where('entity', $entity)
+            ->latest()
+            ->first();
+        return $form != null ? response()->json($form) : abort(404);
     }
 }

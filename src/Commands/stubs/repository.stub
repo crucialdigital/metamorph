@@ -4,13 +4,13 @@ namespace App\Repositories;
 
 use App\Models\{{ model }};
 use CrucialDigital\Metamorph\DataRepositoryBuilder;
-use Illuminate\Database\Eloquent\Builder;
+use MongoDB\Laravel\Eloquent\Builder;
 
 class {{ class_name }} extends DataRepositoryBuilder
 {
 
     public function builder(): Builder
     {
-        return {{ model }}::query();
+        return {{ model }}::where('_id', 'exists', true);
     }
 }

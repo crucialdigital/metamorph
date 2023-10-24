@@ -30,7 +30,11 @@ class StoreMasterStoreFormRequest extends FormRequest
         $formRequest = [
             'form_id' => ['required', 'string', 'exists:metamorph_forms,_id'],
         ];
-        $form = MetamorphForm::findOrFail($this->input('form_id'));
+        $form = MetamorphForm::where('_id', $this->input('form_id'))
+            ->orWhere('entity', $this->input('entity'))->first();
+        if (!$form) {
+            abort(404);
+        }
         $inputs = [];
 
         if ($form && $form->getAttribute('inputs')) {
@@ -52,14 +56,11 @@ class StoreMasterStoreFormRequest extends FormRequest
             'tel' => ['string'],
             'email' => ['string', 'email'],
             'date' => ['date'],
-            'photo' => (Str::lower($this->method) == 'POST'
-                && ($this->input('_method') != 'PATCH'
-                    && $this->input('_method') != 'PUT')) ? ['file'] : [],
-            'file' => (Str::lower($this->method) == 'POST'
-                && ($this->input('_method') != 'PATCH'
-                    && $this->input('_method') != 'PUT')) ? ['file'] : [],
+            'photo' => ['file'],
+            'file' => ['file'],
             'geopoint' => ['string'],
-            'polygon' => ['array']
+            'polygon' => ['array'],
+            'stringArray' => ['array']
         ];
 
         foreach ($inputs as $input) {
@@ -71,11 +72,11 @@ class StoreMasterStoreFormRequest extends FormRequest
             }
 
             if (isset($input['type']) && $input['type'] == 'file') {
-                $rules[] = 'max:' . (814 + 2097152) * 1.37;
+                $rules[] = 'max:2048';
             }
 
             if (isset($input['type']) && $input['type'] == 'photo') {
-                $rules[] = 'max:' . (814 + 512000) * 1.37;
+                $rules[] = 'max:1536';
             }
 
             if (isset($input['type']) && $input['type'] == 'geopoint') {
@@ -87,8 +88,18 @@ class StoreMasterStoreFormRequest extends FormRequest
             if (isset($input['max'])) $rules[] = 'max:' . $input['max'];
 
             if (isset($input['type']) && $input['type'] == 'select' && is_array($input['options']) && count($input['options']) > 0) {
-                $list = implode(',', $input['options']);
+                $list = implode(',', collect($input['options'])->map(function ($option) {
+                    return is_array($option) ? $option['value'] : $option;
+                })->toArray());
                 $rules [] = 'in:' . $list;
+            }
+            if (isset($input['rules']) && isset($input['rules']['store'])) {
+                $r = explode('|', $input['rules']['store']);
+                foreach ($r as $str) {
+                    if (!in_array($str, $rules)) {
+                        $rules[] = $str;
+                    }
+                }
             }
             $formRequest [$input['field']] = $rules;
         }
@@ -98,7 +109,9 @@ class StoreMasterStoreFormRequest extends FormRequest
     public function attributes(): array
     {
         $attributes = [];
-        $inputs = MetamorphForm::findOrFail($this->input('form_id'))?->getAttribute('inputs') ?? [];
+        $inputs = MetamorphForm::where('_id', $this->input('form_id'))
+                ->orWhere('entity', $this->input('entity'))->first()
+                ?->getAttribute('inputs') ?? [];
         foreach ($inputs as $input) {
             $attributes[$input['field']] = Str::lower($input['name']);
         }

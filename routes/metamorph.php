@@ -14,6 +14,7 @@ Route::prefix('api/metamorph')
         Route::post('/search/{entity}', [SearchController::class, 'search']);
         Route::post('/many/search', [SearchController::class, 'findAll']);
         Route::post('/exports/{entity}/{form}', [SearchController::class, 'export']);
+        Route::post('/form/{entity}', [MetamorphFormController::class, 'get_form_by_entity']);
 
         Route::apiResource('/forms', MetamorphFormController::class);
         Route::apiResource('/form-data', MetamorphFormDataController::class);
@@ -21,7 +22,7 @@ Route::prefix('api/metamorph')
         Route::post('/validate/form-data/{id}', [MetamorphFormDataController::class, 'validateFormData']);
         Route::patch('/reject/form-data/{id}', [MetamorphFormDataController::class, 'rejectFormData']);
 
-        Route::delete('/master/{entity}', [MasterCrudController::class, 'erase']);
+        Route::delete('/master/erase/{entity}', [MasterCrudController::class, 'erase']);
         Route::apiResource('/master/{entity}', MasterCrudController::class)->except(['index'])->parameters([
             '{entity}' => 'id'
         ]);

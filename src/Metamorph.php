@@ -5,13 +5,20 @@ namespace CrucialDigital\Metamorph;
 use Countable;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
 
 class Metamorph
 {
     public static function mapFormRequestData(Countable|array $form_data): array
     {
-        $form = MetamorphForm::findOrFail($form_data['form_id']);
+        $form = MetamorphForm::where('_id', $form_data['form_id'] ?? null)
+            ->orWhere('entity', $form_data['entity'] ?? '__unknown__')
+            ->first();
+        if (!$form) {
+            return [];
+        }
 
         $extras = config('metamorph.models.' . $form_data['entity'])::extraFields() ?? [];
 
@@ -37,7 +44,7 @@ class Metamorph
         return $rtr;
     }
 
-    public static function mapFormRequestFiles(Request $request, string $entity_id, string $form_id): array
+    public static function mapFormRequestFiles(Request $request, string $file_name, string $form_id): array
     {
         $return = [];
         $form = MetamorphForm::find($form_id);
@@ -45,20 +52,43 @@ class Metamorph
         $form_inputs = $form->inputs()->whereIn('type', ['file', 'photo'])->get();
 
         foreach ($form_inputs as $input) {
-            if(isset($input['field']) && is_string($request->input($input['field']))){
+            if (isset($input['field']) && is_string($request->input($input['field']))) {
                 $return[$input['field']] = $request->input($input['field']);
                 continue;
             }
             if (isset($input['field']) && isset($input['type']) && in_array($input['type'], ['file', 'photo'])) {
                 if ($request->hasFile($input['field']) && $request->file($input['field'])->isValid()) {
-                    $path = $form['formType'] . '/' . $input['field'] . '/';
-                    if ($request->file($input['field'])->storePubliclyAs($path, $entity_id . '.' . $request->file($input['field'])->getClientOriginalExtension())) {
-                        $return[$input['field']] = $path . $entity_id . '.' . $request->file($input['field'])->getClientOriginalExtension();
+                    $path = config('metamorph.upload_path') . '/' . $form['entity'] . '/' . now()->format('mY') . '/' . $input['field'] . '/';
+                    $file_full_name = $file_name . '.' . $request->file($input['field'])->getClientOriginalExtension();
+                    $tmp_name = time() . '_' . $file_full_name;
+                    $tmp_full_path = public_path('tmp/' . $tmp_name);
+                    $request->file($input['field'])->move(public_path('tmp/'), $tmp_name);
+                    if ($input['type'] == 'photo') {
+                        Image::make($tmp_full_path)->resize(null, 1000, function ($constraint) {
+                            $constraint->aspectRatio();
+                            $constraint->upsize();
+                        })->save($tmp_full_path);
+                    }
+                    $stored = Storage::put($path . $file_full_name, file_get_contents($tmp_full_path), 'public');
+                    unlink($tmp_full_path);
+                    if ($stored) {
+                        $return[$input['field']] = $path . $file_full_name;
+                        if ($input['type'] == 'photo') {
+                            try {
+                                $cropImage = public_path('/thumbnails');
+                                $request->file($input['field'])->move($cropImage);
+                                $thumbnail_path = $path . 'thumbnails/thumbnail_' . $file_name;
+                                $return[$input['field'] . '_thumbnail'] = static::createThumbnail($cropImage, $thumbnail_path);
+
+                            } catch (\Exception $e) {
+                                Log::alert($e->getMessage());
+                            }
+                        }
                     } else {
-                        \Illuminate\Support\Facades\Log::error('Can\'t store');
+                        Log::error('Can\'t store');
                     }
                 } else {
-                    \Illuminate\Support\Facades\Log::error('Invalid file');
+                    Log::error('Invalid file');
                 }
             }
         }
@@ -66,19 +96,14 @@ class Metamorph
         return $return;
     }
 
-    public static function mergeFormFields($entity, array $default = []): array
+    public static function createThumbnail($src_path, $dest_path): ?string
     {
-        $forms = MetamorphForm::query()->where('formType', $entity)->get(['inputs']);
-        $fields = ['_id', ...$default];
-        foreach ($forms as $form) {
-            if (isset($form['inputs'])) {
-                foreach ($form['inputs'] as $input) {
-                    if (isset($input['field']) && !in_array($input['field'], $fields)) {
-                        $fields [] = $input['field'];
-                    }
-                }
-            }
-        }
-        return $fields;
+        Image::make($src_path)->resize(null, 300, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        })->save($src_path);
+        $rtr = Storage::put($dest_path, file_get_contents($src_path), 'public');
+        unlink($src_path);
+        return $rtr ? $dest_path : null;
     }
 }

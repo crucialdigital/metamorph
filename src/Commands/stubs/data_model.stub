@@ -1,0 +1,20 @@
+{
+    "name": "{{ model_name }}",
+    "ref": "{{ model_name_lower }}",
+    "entity": "{{ model_name_lower }}",
+    "readOnly": true,
+    "inputs": [
+        {
+            "field": "name",
+            "type": "text",
+            "name": "Nom",
+            "description": "Nom",
+            "placeholder": "Entrer le nom",
+            "required": true,
+            "readOnly": true
+        }
+    ],
+    "columns": [
+        "name"
+    ]
+}
