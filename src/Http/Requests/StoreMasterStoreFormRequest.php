@@ -5,6 +5,7 @@ namespace CrucialDigital\Metamorph\Http\Requests;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\Rules\GeoPointRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class StoreMasterStoreFormRequest extends FormRequest
@@ -53,6 +54,7 @@ class StoreMasterStoreFormRequest extends FormRequest
             'multiselect' => ['array'],
             'resource' => ['string'],
             'number' => ['numeric'],
+            'currency' => ['numeric'],
             'tel' => ['string'],
             'email' => ['string', 'email'],
             'date' => ['date'],
@@ -69,6 +71,12 @@ class StoreMasterStoreFormRequest extends FormRequest
 
             if (isset($input['type']) && isset($type_match[$input['type']])) {
                 $rules = [...$rules, ...$type_match[$input['type']]];
+            }
+
+            if (isset($input['unique']) && $input['unique'] == true) {
+                if ($class_name = config('metamorph.models.' . $this->input('entity'))) {
+                    $rules[] = 'unique:' . $class_name . ',' . $input['field'];
+                }
             }
 
             if (isset($input['type']) && $input['type'] == 'file') {

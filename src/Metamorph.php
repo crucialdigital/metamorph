@@ -29,16 +29,25 @@ class Metamorph
 
         foreach ($form_data as $k => $datum) {
             $self_input = collect($form_inputs)->firstWhere('field', '=', $k);
-            if (isset($self_input)
-                && isset($self_input['type'])
-                && $self_input['type'] != 'file'
-                && $self_input['type'] != 'photo'
-                && isset($datum)) {
-                $rtr[$k] = $datum;
-            } else {
+            if (!isset($self_input)) {
                 if (in_array($k, $extras)) {
                     $rtr[$k] = $datum;
                 }
+                continue;
+            }
+
+            if (in_array($self_input['type'], ['file', 'photo'])) {
+                continue;
+            }
+
+            if (isset($datum)) {
+                if ($self_input['type'] == 'password'
+                    && $self_input['encrypted'] == true) {
+                    $rtr[$k] = bcrypt($datum);
+                } else {
+                    $rtr[$k] = $datum;
+                }
+
             }
         }
         return $rtr;
@@ -85,10 +94,10 @@ class Metamorph
                             }
                         }
                     } else {
-                        Log::error('Can\'t store');
+                        Log::debug('Can\'t store');
                     }
                 } else {
-                    Log::error('Invalid file');
+                    Log::debug('No valid file');
                 }
             }
         }

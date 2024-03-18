@@ -54,6 +54,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
             'multiselect' => ['array'],
             'resource' => ['string'],
             'number' => ['numeric'],
+            'currency' => ['numeric'],
             'tel' => ['string'],
             'email' => ['string', 'email'],
             'date' => ['date'],

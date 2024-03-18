@@ -118,10 +118,10 @@ class SearchController extends Controller
         }
 
         if (!class_exists($model)) {
-            abort(404, "Model not found !");
+            abort(404, "Model not found ! v");
         }
 
-        return $model::query();
+        return $model::where('_id', 'exists', true);
     }
 
 
