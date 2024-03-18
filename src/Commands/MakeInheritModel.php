@@ -46,6 +46,9 @@ class MakeInheritModel extends Command
             $content = Str::replace($search, $replace, $content);
         }
         file_put_contents($dir . Str::ucfirst($this->argument('name')) . '.php', $content);
+
+        Artisan::call('metamorph:make-data-model ' . $this->argument('name'));
+
         if($this->option('repository')){
             $repository_name = Str::ucfirst($this->argument('name')) . 'Repository';
             Artisan::call('metamorph:make-repository ' . $repository_name . ' --model='. $this->argument('name'));

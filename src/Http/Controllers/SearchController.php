@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -28,7 +27,7 @@ class SearchController extends Controller
                     }
                 } else {
                     if (class_exists($middleware) && is_array($only) && in_array('index', $only)) {
-                        $this->middleware($middleware)->only(['search', 'export']);
+                        $this->middleware($middleware, ['only' => ['search', 'export']]);
                     }
                 }
             }
@@ -119,10 +118,10 @@ class SearchController extends Controller
         }
 
         if (!class_exists($model)) {
-            abort(404, "Model not found !");
+            abort(404, "Model not found ! v");
         }
 
-        return $model::query();
+        return $model::where('_id', 'exists', true);
     }
 
 

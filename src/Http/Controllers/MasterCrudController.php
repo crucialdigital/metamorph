@@ -6,9 +6,12 @@ use CrucialDigital\Metamorph\Http\Requests\StoreMasterStoreFormRequest;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterUpdateFormRequest;
 use CrucialDigital\Metamorph\Metamorph;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
+use CrucialDigital\Metamorph\ResourceQueryLoader;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use MongoDB\Laravel\Eloquent\Builder;
 
 class MasterCrudController extends Controller
 {
@@ -24,8 +27,8 @@ class MasterCrudController extends Controller
                         $this->middleware($middleware);
                     }
                 } else {
-                    if(class_exists($middleware) && is_array($only)){
-                        $this->middleware($middleware)->only($only);
+                    if (class_exists($middleware) && is_array($only)) {
+                        $this->middleware($middleware, ['only' => $only]);
                     }
                 }
             }
@@ -66,11 +69,14 @@ class MasterCrudController extends Controller
     public function show(string $model, string $id): JsonResponse
     {
         /**
-         * @var array $data
+         * @var Builder $data
          */
-        $data = config('metamorph.models.' . $model)::findOrFail($id);
+        $data = config('metamorph.models.' . $model)::where('_id', '=', $id);
+        $with = ResourceQueryLoader::makeRelations($data);
+        if ($with != null) $data = $data->with($with);
+        $data = $data->firstOrFail();
 
-        $form = MetamorphForm::query()->where('entity', $model)->latest()->first();
+        $form = MetamorphForm::where('entity', $model)->latest()->first();
         $inputs = $form?->getAttribute('inputs');
         if ($inputs) {
             $metas = collect($inputs)
@@ -79,7 +85,7 @@ class MasterCrudController extends Controller
                 })->map(function ($el) use ($data) {
                     try {
                         $res = config('metamorph.models.' . $el['entity'])::find($data[$el['field']]);
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         $res = null;
                     }
                     return [

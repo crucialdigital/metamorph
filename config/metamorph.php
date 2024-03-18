@@ -1,6 +1,8 @@
 <?php
 
 // config for CrucialDigital/DataModel
+use Illuminate\Support\Str;
+
 return [
 
     /*
@@ -40,6 +42,14 @@ return [
      */
 
     'route_prefix' => 'metamorph',
+
+
+    /*
+     * Prefix for form uploaded files
+     */
+
+    'upload_path' => Str::slug(Str::lower(env('APP_NAME', 'metamorph'))),
+
 
     /*
      * Resources are data models created and that we use for another purpose

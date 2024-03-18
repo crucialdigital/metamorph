@@ -4,13 +4,12 @@ namespace CrucialDigital\Metamorph\Http\Controllers;
 
 
 use CrucialDigital\Metamorph\ResourceQueryLoader;
-use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Jenssegers\Mongodb\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class MetamorphFormResourcesController extends Controller
 {
@@ -28,10 +27,13 @@ class MetamorphFormResourcesController extends Controller
     {
 
         $model = config('metamorph.models.' . $entity);
+        $repository = config('metamorph.repositories.' . $entity);
+
+        $repository = class_exists($repository) ? (new $repository)->builder() : $model::where('_id', 'exists', true);
+
         if (class_exists($model) && method_exists($model, 'label')) {
-            $data = $model::query();
-            $data = $this->load($request, $data, $model::search());
-            return response()->json($this->transform($data, $model::label()));
+            $data = $this->load($request, $repository, $model::search());
+            return response()->json($this->transform($data, $model::label(), $model::labelValue()));
         } else {
             return response()->json([]);
         }
@@ -59,15 +61,16 @@ class MetamorphFormResourcesController extends Controller
 
     /**
      * @param Collection $collection
-     * @param string $attribute
+     * @param string $label
+     * @param string $labelValue
      * @return Collection
      */
-    private function transform(Collection $collection, string $attribute): Collection
+    private function transform(Collection $collection, string $label, string $labelValue): Collection
     {
-        return $collection->map(function (Model $item) use ($attribute) {
+        return $collection->map(function (Model $item) use ($label, $labelValue) {
             return [
-                'value' => $item->getAttribute('_id'),
-                'label' => $this->getAttribute($item, $attribute),
+                'value' => $item->getAttribute($labelValue) ?? $item->getAttribute('_id'),
+                'label' => $this->getAttribute($item, $label),
             ];
         });
     }

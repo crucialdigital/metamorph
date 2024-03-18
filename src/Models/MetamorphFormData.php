@@ -2,7 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Models;
 
-use Jenssegers\Mongodb\Relations\BelongsTo;
+use MongoDB\Laravel\Relations\BelongsTo;
 
 /**
  * @property mixed $Form
