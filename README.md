@@ -5,7 +5,7 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/crucialdigital/metamorph/Fix%20PHP%20code%20style%20issues?label=code%20style)](https://github.com/crucialdigital/metamorph/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/crucialdigital/metamorph.svg?style=flat-square)](https://packagist.org/packages/crucialdigital/metamorph)
 
-Metamorph is a Laravel package that implement a data model system based on mongodb.
+Metamorph is a Laravel package that implements a data model system based on mongodb.
 This package provides a powerful system for managing dynamic forms for api development.  
 
 Before going any further, consider that this package is intended for API development with Laravel and Mongodb
@@ -33,14 +33,14 @@ Create your data model files with artisan command:
 ```bash
 php artisan metamorph:make-model Post -R
 ```
-This command will create three file:  
+This command will create three files:  
 
 * Eloquent model file
 
 ```xpath 
 app/Models/Post.php 
 ```  
-Is Laravel Eloquent model extends from ___CrucialDigital\Metamorph\BaseModel.php___ class. 
+Is Laravel Eloquent model extends from _CrucialDigital\Metamorph\BaseModel.php_ class. 
 You are free to create your model with [Laravel syntax](https://laravel.com/docs/11.x/eloquent#generating-model-classes) 
 ```bash
 php artisan make:model Post
@@ -51,7 +51,7 @@ php artisan make:model Post
 app/Repositories/PostRepositories.php
 ```
 
-Is the repository classe responsible for creating the model query builder. You can also create repositories with artisan command
+Is the repository class responsible for creating the model query builder. You can also create repositories with artisan command
 
 ```bash
 php artisan metamorph:make-repository PostRepository --model=Post
@@ -62,7 +62,7 @@ php artisan metamorph:make-repository PostRepository --model=Post
 ```xpath
 database/models/post.json
 ```
-The json file describe the form that handle the model with all his inputs.
+The json file describes the form that handles the model with all its inputs.
 The json file structure looks like:
 
 ```json
@@ -99,9 +99,9 @@ The json file structure looks like:
     ]
 }
 ```
-Where required field are **entity** and **inputs**  
+where required fields are **entity** and **inputs**.  
 
-Each entry of input must have at least:  
+Each entry of **inputs** must have at least:  
 
     * field: The input field
     * name: The label of the input
@@ -140,7 +140,7 @@ Other field are :
 
 ### 2. Configure data model into metamorph config file
 
-To configure how metamorph map model with repository, data model form, controller and routes, you have to indicate in metamorph config file
+To configure how metamorph maps model with repository, data model form, controller and routes, you have to indicate in metamorph config file
 in models and repositories sections respectively the Eloquent model and model repository.  
 
 Exemple :  
