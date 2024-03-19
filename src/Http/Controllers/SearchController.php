@@ -6,6 +6,7 @@ use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,6 +36,9 @@ class SearchController extends Controller
         }
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function search($entity): JsonResponse
     {
 

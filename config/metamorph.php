@@ -36,11 +36,25 @@ return [
 
     'model_middlewares' => [],
 
-    /*
-     * Middleware for model routes
+
+
+    'auth_service_provider' => 'App\\Providers\\AuthServiceProvider',
+
+    /**
+     * Registered policies
      */
 
-    'policies' => [],
+    'policies' => [
+
+    ],
+
+    /**
+     * Policies actions authorized
+     */
+
+    'policies_actions' => [
+
+    ],
 
 
     /*
