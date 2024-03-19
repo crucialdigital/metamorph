@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use MongoDB\Laravel\Eloquent\Builder;
+use MongoDB\Laravel\Eloquent\Model;
 
 class MasterCrudController extends Controller
 {
@@ -74,12 +75,6 @@ class MasterCrudController extends Controller
      */
     public function show(string $model, string $id): JsonResponse
     {
-
-        $policies = config('metamorph.policies.' . $model, []);
-
-        if (in_array('view', $policies)) {
-            Gate::authorize("view $model", config("metamorph.models.$model"));
-        }
         /**
          * @var Builder $data
          */
@@ -87,6 +82,12 @@ class MasterCrudController extends Controller
         $with = ResourceQueryLoader::makeRelations($data);
         if ($with != null) $data = $data->with($with);
         $data = $data->firstOrFail();
+
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('view', $policies)) {
+            Gate::authorize("view $model", $data);
+        }
 
         $form = MetamorphForm::where('entity', $model)->latest()->first();
         $inputs = $form?->getAttribute('inputs');
@@ -128,6 +129,12 @@ class MasterCrudController extends Controller
             Gate::authorize("update $model", config("metamorph.models.$model"));
         }
         $entity = config('metamorph.models.' . $model)::findOrFail($id);
+
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('update', $policies)) {
+            Gate::authorize("update $model", $entity);
+        }
         $data = $request->all();
         $formData = Metamorph::mapFormRequestData($data);
         $files = Metamorph::mapFormRequestFiles($request, $id, $request->input('form_id'));
@@ -147,33 +154,15 @@ class MasterCrudController extends Controller
     public function destroy(string $model, string $id): JsonResponse
     {
 
-        $policies = config('metamorph.policies.' . $model, []);
-
-        if (in_array('delete', $policies)) {
-            Gate::authorize("delete $model", config("metamorph.models.$model"));
-        }
-
-        $actor = config('metamorph.models.' . $model)::findOrFail($id);
-        $actor?->delete();
-        return response()->json($actor);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Request $request
-     * @param string $model
-     * @return JsonResponse
-     */
-    public function erase(Request $request, string $model): JsonResponse
-    {
+        $data = config('metamorph.models.' . $model)::findOrFail($id);
 
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('delete', $policies)) {
-            Gate::authorize("delete $model", config("metamorph.models.$model"));
+            Gate::authorize("delete $model", $data);
         }
-        $count = config('metamorph.models.' . $model)::destroy($request->input('ids', []));
-        return response()->json($count);
+
+        $data?->delete();
+        return response()->json($data);
     }
 }
