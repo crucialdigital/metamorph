@@ -48,7 +48,7 @@ class MasterCrudController extends Controller
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('create', $policies)) {
-            Gate::authorize("create $model");
+            Gate::authorize("create $model", config("metamorph.models.$model"));
         }
 
         $formData = Metamorph::mapFormRequestData($request->all());
@@ -78,7 +78,7 @@ class MasterCrudController extends Controller
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('view', $policies)) {
-            Gate::authorize("view $model");
+            Gate::authorize("view $model", config("metamorph.models.$model"));
         }
         /**
          * @var Builder $data
@@ -125,7 +125,7 @@ class MasterCrudController extends Controller
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('update', $policies)) {
-            Gate::authorize("update $model");
+            Gate::authorize("update $model", config("metamorph.models.$model"));
         }
         $entity = config('metamorph.models.' . $model)::findOrFail($id);
         $data = $request->all();
@@ -150,7 +150,7 @@ class MasterCrudController extends Controller
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('delete', $policies)) {
-            Gate::authorize("delete $model");
+            Gate::authorize("delete $model", config("metamorph.models.$model"));
         }
 
         $actor = config('metamorph.models.' . $model)::findOrFail($id);
@@ -171,7 +171,7 @@ class MasterCrudController extends Controller
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('delete', $policies)) {
-            Gate::authorize("delete $model");
+            Gate::authorize("delete $model", config("metamorph.models.$model"));
         }
         $count = config('metamorph.models.' . $model)::destroy($request->input('ids', []));
         return response()->json($count);
