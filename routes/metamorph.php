@@ -21,8 +21,6 @@ Route::prefix('api/metamorph')
         Route::apiResource('/form-inputs', MetamorphFormInputController::class)->except(['index']);
         Route::post('/validate/form-data/{id}', [MetamorphFormDataController::class, 'validateFormData']);
         Route::patch('/reject/form-data/{id}', [MetamorphFormDataController::class, 'rejectFormData']);
-
-        Route::delete('/master/erase/{entity}', [MasterCrudController::class, 'erase']);
         Route::apiResource('/master/{entity}', MasterCrudController::class)->except(['index'])->parameters([
             '{entity}' => 'id'
         ]);
