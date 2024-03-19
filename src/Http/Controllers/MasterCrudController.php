@@ -49,7 +49,7 @@ class MasterCrudController extends Controller
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('create', $policies)) {
-            Gate::authorize("create $model", config("metamorph.models.$model"));
+            Gate::authorize("create", config("metamorph.models.$model"));
         }
 
         $formData = Metamorph::mapFormRequestData($request->all());
@@ -86,7 +86,7 @@ class MasterCrudController extends Controller
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('view', $policies)) {
-            Gate::authorize("view $model", $data);
+            Gate::authorize("view", $data);
         }
 
         $form = MetamorphForm::where('entity', $model)->latest()->first();
@@ -122,18 +122,12 @@ class MasterCrudController extends Controller
      */
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
-
-        $policies = config('metamorph.policies.' . $model, []);
-
-        if (in_array('update', $policies)) {
-            Gate::authorize("update $model", config("metamorph.models.$model"));
-        }
         $entity = config('metamorph.models.' . $model)::findOrFail($id);
 
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('update', $policies)) {
-            Gate::authorize("update $model", $entity);
+            Gate::authorize("update", $entity);
         }
         $data = $request->all();
         $formData = Metamorph::mapFormRequestData($data);
@@ -159,7 +153,7 @@ class MasterCrudController extends Controller
         $policies = config('metamorph.policies.' . $model, []);
 
         if (in_array('delete', $policies)) {
-            Gate::authorize("delete $model", $data);
+            Gate::authorize("delete", $data);
         }
 
         $data?->delete();
