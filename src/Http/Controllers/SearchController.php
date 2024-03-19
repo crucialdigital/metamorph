@@ -41,7 +41,7 @@ class SearchController extends Controller
         $policies = config('metamorph.policies.' . $entity, []);
 
         if (in_array('viewany', $policies)) {
-            Gate::authorize("viewany", config("metamorph.models.$entity"));
+            Gate::authorize("viewAny", config("metamorph.models.$entity"));
         }
 
         $builder = $this->_makeBuilder($entity);
@@ -66,7 +66,7 @@ class SearchController extends Controller
         $policies = config('metamorph.policies.' . $entity, []);
 
         if (in_array('viewany', $policies)) {
-            Gate::authorize("viewany", config("metamorph.models.$entity"));
+            Gate::authorize("viewAny", config("metamorph.models.$entity"));
         }
 
         $form = MetamorphForm::findOrFail($form);
