@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -36,6 +37,13 @@ class SearchController extends Controller
 
     public function search($entity): JsonResponse
     {
+
+        $policies = config('metamorph.policies.' . $entity, []);
+
+        if (in_array('viewany', $policies)) {
+            Gate::authorize("viewany $entity");
+        }
+
         $builder = $this->_makeBuilder($entity);
 
         if ($builder != null) {
@@ -54,6 +62,13 @@ class SearchController extends Controller
 
     public function export($entity, $form): Response|BinaryFileResponse|JsonResponse
     {
+
+        $policies = config('metamorph.policies.' . $entity, []);
+
+        if (in_array('viewany', $policies)) {
+            Gate::authorize("viewany $entity");
+        }
+
         $form = MetamorphForm::findOrFail($form);
         $builder = $this->_makeBuilder($entity);
 

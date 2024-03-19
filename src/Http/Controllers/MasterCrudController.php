@@ -10,7 +10,7 @@ use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use MongoDB\Laravel\Eloquent\Builder;
 
 class MasterCrudController extends Controller
@@ -45,6 +45,12 @@ class MasterCrudController extends Controller
     public function store(StoreMasterStoreFormRequest $request, string $model): JsonResponse
     {
 
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('create', $policies)) {
+            Gate::authorize("create $model");
+        }
+
         $formData = Metamorph::mapFormRequestData($request->all());
 
         $entity = config('metamorph.models.' . $model)::create($formData);
@@ -68,6 +74,12 @@ class MasterCrudController extends Controller
      */
     public function show(string $model, string $id): JsonResponse
     {
+
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('view', $policies)) {
+            Gate::authorize("view $model");
+        }
         /**
          * @var Builder $data
          */
@@ -109,6 +121,12 @@ class MasterCrudController extends Controller
      */
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
+
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('update', $policies)) {
+            Gate::authorize("update $model");
+        }
         $entity = config('metamorph.models.' . $model)::findOrFail($id);
         $data = $request->all();
         $formData = Metamorph::mapFormRequestData($data);
@@ -128,6 +146,13 @@ class MasterCrudController extends Controller
      */
     public function destroy(string $model, string $id): JsonResponse
     {
+
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('delete', $policies)) {
+            Gate::authorize("delete $model");
+        }
+
         $actor = config('metamorph.models.' . $model)::findOrFail($id);
         $actor?->delete();
         return response()->json($actor);
@@ -142,6 +167,12 @@ class MasterCrudController extends Controller
      */
     public function erase(Request $request, string $model): JsonResponse
     {
+
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('delete', $policies)) {
+            Gate::authorize("delete $model");
+        }
         $count = config('metamorph.models.' . $model)::destroy($request->input('ids', []));
         return response()->json($count);
     }

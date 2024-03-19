@@ -36,6 +36,12 @@ return [
 
     'model_middlewares' => [],
 
+    /*
+     * Middleware for model routes
+     */
+
+    'policies' => [],
+
 
     /*
      * Prefix for model routes
@@ -66,7 +72,7 @@ return [
     ],
 
     /*
-     * Models are an array of the corresponding entity of the laravel Models of your application
+     * models are an array of the corresponding entity of the laravel Models of your application
      * i.e
      * [
      *  'user' => App\Models\User::class,

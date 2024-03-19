@@ -142,7 +142,7 @@ Other field are :
 To configure how metamorph maps model with repository, data model form, controller and routes, you have to indicate in metamorph config file
 in models and repositories sections respectively the Eloquent model and model repository.  
 
-Exemple :  
+Example :  
 
 ```php
 // config/metamorph.php
