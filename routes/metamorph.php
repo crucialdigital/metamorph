@@ -8,7 +8,7 @@ use CrucialDigital\Metamorph\Http\Controllers\MasterCrudController;
 use CrucialDigital\Metamorph\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('api/metamorph')
+Route::prefix('api/' . config('metamorph.route_prefix', 'metamorph'))
     ->middleware(['api'])->group(function () {
     Route::middleware(config('metamorph.middlewares'))->group(function () {
         Route::post('/search/{entity}', [SearchController::class, 'search']);
