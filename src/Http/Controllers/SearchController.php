@@ -39,7 +39,6 @@ class SearchController extends Controller
     }
 
     /**
-     * @throws AuthorizationException
      */
     public function search(Request $request, $entity): JsonResponse
     {
