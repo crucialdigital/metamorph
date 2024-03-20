@@ -30,6 +30,7 @@ class MetamorphServiceProvider extends PackageServiceProvider
                     MakeRepository::class,
                     InstallMetamorph::class,
                     MakeDataModel::class
-                ]);
+                ]
+            );
     }
 }

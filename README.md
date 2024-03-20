@@ -1,4 +1,4 @@
-# Package of data models and dynamic forms managements
+# Crucial Digital Metamorph
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/crucialdigital/metamorph.svg?style=flat-square)](https://packagist.org/packages/crucialdigital/metamorph)
 [![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/crucialdigital/metamorph/run-tests?label=tests)](https://github.com/crucialdigital/metamorph/actions?query=workflow%3Arun-tests+branch%3Amain)
@@ -9,6 +9,21 @@ Metamorph is a Laravel package that implements a data model system based on mong
 This package provides a powerful system for managing dynamic forms for api development.  
 
 Before going any further, consider that this package is intended for API development with Laravel and Mongodb
+## Table of contents
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Creating Model, Repository and data model](#creating-model-repository-and-data-model)
+  - [Configure data model into metamorph config file](#configure-data-model-into-metamorph-config-file)
+  - [Run your data models](#run-your-data-models)
+- [Advanced](#advanced) 
+  - [Global Middleware](#global-middleware)
+  - [Model Middleware](#model-middleware)
+  - [Policies](#policies)
+- [Changelog](#changelog)  
+- [Contributing](#contributing)  
+- [Security Vulnerabilities](#security-vulnerabilities)  
+- [Credits](#credits)  
+- [License](#license)  
 
 
 ## Installation
@@ -27,7 +42,7 @@ php artisan vendor:publish --tag="metamorph-config"
 
 ## Usage
 
-### 1. Creating Model, Repository and Data model
+### 1. Creating Model Repository and data model
 
 Create your data model files with artisan command:
 ```bash
@@ -38,10 +53,11 @@ This command will create three files:
 * Eloquent model file
 
 ```xpath 
-app/Models/Post.php 
+app/Models/Post.php
 ```  
-Is Laravel Eloquent model extends from _CrucialDigital\Metamorph\BaseModel.php_ class. 
-You are free to create your model with [Laravel syntax](https://laravel.com/docs/11.x/eloquent#generating-model-classes) 
+Is Laravel Eloquent model extends from `CrucialDigital\Metamorph\BaseModel.php` class. 
+You are free to create your model with [Laravel syntax](https://laravel.com/docs/11.x/eloquent#generating-model-classes)
+and extends `CrucialDigital\Metamorph\BaseModel.php`
 ```bash
 php artisan make:model Post
 ```
@@ -143,7 +159,7 @@ Other field are :
 To configure how metamorph maps model with repository, data model form, controller and routes, you have to indicate in metamorph config file
 in models and repositories sections respectively the Eloquent model and model repository.  
 
-Exemple :  
+Example :  
 
 ```php
 // config/metamorph.php
@@ -160,8 +176,9 @@ Exemple :
     ...
 ]
 ```
-
-
+### 3. Run your data models
+After creating your data models in .json files, you have to persist into your database. 
+Consider configuring the mongodb database connection before.
 
 ## Changelog
 

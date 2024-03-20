@@ -6,10 +6,14 @@ use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -34,8 +38,19 @@ class SearchController extends Controller
         }
     }
 
-    public function search($entity): JsonResponse
+    /**
+     * @throws AuthorizationException
+     */
+    public function search(Request $request, $entity): JsonResponse
     {
+
+        $policies = config('metamorph.policies.' . $entity, []);
+
+        if (in_array('viewany', $policies)) {
+            Log::debug(Auth::user());
+            Gate::authorize("viewAny", config("metamorph.models.$entity"));
+        }
+
         $builder = $this->_makeBuilder($entity);
 
         if ($builder != null) {
@@ -54,6 +69,13 @@ class SearchController extends Controller
 
     public function export($entity, $form): Response|BinaryFileResponse|JsonResponse
     {
+
+        $policies = config('metamorph.policies.' . $entity, []);
+
+        if (in_array('viewany', $policies)) {
+            Gate::authorize("viewAny", config("metamorph.models.$entity"));
+        }
+
         $form = MetamorphForm::findOrFail($form);
         $builder = $this->_makeBuilder($entity);
 

@@ -10,8 +10,9 @@ use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use MongoDB\Laravel\Eloquent\Builder;
+use MongoDB\Laravel\Eloquent\Model;
 
 class MasterCrudController extends Controller
 {
@@ -45,6 +46,12 @@ class MasterCrudController extends Controller
     public function store(StoreMasterStoreFormRequest $request, string $model): JsonResponse
     {
 
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('create', $policies)) {
+            Gate::authorize("create", config("metamorph.models.$model"));
+        }
+
         $formData = Metamorph::mapFormRequestData($request->all());
 
         $entity = config('metamorph.models.' . $model)::create($formData);
@@ -75,6 +82,12 @@ class MasterCrudController extends Controller
         $with = ResourceQueryLoader::makeRelations($data);
         if ($with != null) $data = $data->with($with);
         $data = $data->firstOrFail();
+
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('view', $policies)) {
+            Gate::authorize("view", $data);
+        }
 
         $form = MetamorphForm::where('entity', $model)->latest()->first();
         $inputs = $form?->getAttribute('inputs');
@@ -110,6 +123,12 @@ class MasterCrudController extends Controller
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
         $entity = config('metamorph.models.' . $model)::findOrFail($id);
+
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('update', $policies)) {
+            Gate::authorize("update", $entity);
+        }
         $data = $request->all();
         $formData = Metamorph::mapFormRequestData($data);
         $files = Metamorph::mapFormRequestFiles($request, $id, $request->input('form_id'));
@@ -128,21 +147,16 @@ class MasterCrudController extends Controller
      */
     public function destroy(string $model, string $id): JsonResponse
     {
-        $actor = config('metamorph.models.' . $model)::findOrFail($id);
-        $actor?->delete();
-        return response()->json($actor);
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Request $request
-     * @param string $model
-     * @return JsonResponse
-     */
-    public function erase(Request $request, string $model): JsonResponse
-    {
-        $count = config('metamorph.models.' . $model)::destroy($request->input('ids', []));
-        return response()->json($count);
+        $data = config('metamorph.models.' . $model)::findOrFail($id);
+
+        $policies = config('metamorph.policies.' . $model, []);
+
+        if (in_array('delete', $policies)) {
+            Gate::authorize("delete", $data);
+        }
+
+        $data?->delete();
+        return response()->json($data);
     }
 }

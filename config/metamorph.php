@@ -37,6 +37,26 @@ return [
     'model_middlewares' => [],
 
 
+
+    'auth_service_provider' => 'App\\Providers\\AuthServiceProvider',
+
+    /**
+     * Registered policies
+     */
+
+    'policies' => [
+
+    ],
+
+    /**
+     * Policies actions authorized
+     */
+
+    'policies_actions' => [
+
+    ],
+
+
     /*
      * Prefix for model routes
      */
@@ -66,7 +86,7 @@ return [
     ],
 
     /*
-     * Models are an array of the corresponding entity of the laravel Models of your application
+     * models are an array of the corresponding entity of the laravel Models of your application
      * i.e
      * [
      *  'user' => App\Models\User::class,

@@ -8,7 +8,7 @@ use CrucialDigital\Metamorph\Http\Controllers\MasterCrudController;
 use CrucialDigital\Metamorph\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('api/metamorph')
+Route::prefix('api/' . config('metamorph.route_prefix', 'metamorph'))
     ->middleware(['api'])->group(function () {
     Route::middleware(config('metamorph.middlewares'))->group(function () {
         Route::post('/search/{entity}', [SearchController::class, 'search']);
@@ -21,8 +21,6 @@ Route::prefix('api/metamorph')
         Route::apiResource('/form-inputs', MetamorphFormInputController::class)->except(['index']);
         Route::post('/validate/form-data/{id}', [MetamorphFormDataController::class, 'validateFormData']);
         Route::patch('/reject/form-data/{id}', [MetamorphFormDataController::class, 'rejectFormData']);
-
-        Route::delete('/master/erase/{entity}', [MasterCrudController::class, 'erase']);
         Route::apiResource('/master/{entity}', MasterCrudController::class)->except(['index'])->parameters([
             '{entity}' => 'id'
         ]);
