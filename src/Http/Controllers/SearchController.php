@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -39,12 +41,13 @@ class SearchController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function search($entity): JsonResponse
+    public function search(Request $request, $entity): JsonResponse
     {
 
         $policies = config('metamorph.policies.' . $entity, []);
 
         if (in_array('viewany', $policies)) {
+            Log::debug(Auth::user());
             Gate::authorize("viewAny", config("metamorph.models.$entity"));
         }
 
