@@ -15,6 +15,7 @@ Before going any further, consider that this package is intended for API develop
   - [Creating Model, Repository and data model](#creating-model-repository-and-data-model)
   - [Configure data model into metamorph config file](#configure-data-model-into-metamorph-config-file)
   - [Run your data models](#run-your-data-models)
+  - [Make API requests](#make-api-requests)
 - [Advanced](#advanced) 
   - [Global Middleware](#global-middleware)
   - [Model Middleware](#model-middleware)
@@ -42,7 +43,7 @@ php artisan vendor:publish --tag="metamorph-config"
 
 ## Usage
 
-### 1. Creating Model Repository and data model
+### Creating Model Repository and data model
 
 Create your data model files with artisan command:
 ```bash
@@ -154,7 +155,7 @@ Other field are :
 
 >You are free to add any other field to the input that you can use in your frontend application
 
-### 2. Configure data model into metamorph config file
+### Configure data model into metamorph config file
 
 To configure how metamorph maps model with repository, data model form, controller and routes, you have to indicate in metamorph config file
 in models and repositories sections respectively the Eloquent model and model repository.  
@@ -176,9 +177,73 @@ Example :
     ...
 ]
 ```
-### 3. Run your data models
-After creating your data models in .json files, you have to persist into your database. 
+### Run your data models
+After creating your data models in .json files, you have to persist into your database with artisan command.
+```bash
+php artisan metamorph:models
+```
+This artisan command persists data models into the database. Every time you
+modify .json file in `database\models`, update data with this command. You can specify the name of the .json file with `--name` parameter 
+
 Consider configuring the mongodb database connection before.
+
+### Make API requests
+
+Metamorph provides various endpoint de Create, Read, Update en Delete. 
+Available endpoint are :
+
+| Methods   | Endpoints                              | Description                    | Parameters                                                    |
+|:----------|:---------------------------------------|:-------------------------------|:--------------------------------------------------------------|
+| POST      | api/metamorph/exports/{entity}/{form}  | Export data with selected form | `entity`: mapped model entity<br/> `form`: selected data form |
+| GET, HEAD | api/metamorph/form-data                |                                |                                                               |
+| POST      | api/metamorph/form-data                |                                |                                                               |
+| GET,HEAD  | api/metamorph/form-data/{form_datum}   |                                |                                                               |
+| PUT,PATCH | api/metamorph/form-data/{form_datum}   |                                |                                                               |
+| DELETE    | api/metamorph/form-data/{form_datum}   |                                |                                                               |
+| POST      | api/metamorph/form-inputs              |                                |                                                               |
+| GET,HEAD  | api/metamorph/form-inputs/{form_input} |                                |                                                               |
+| PUT,PATCH | api/metamorph/form-inputs/{form_input} |                                |                                                               |
+| DELETE    | api/metamorph/form-inputs/{form_input} |                                |                                                               |
+| POST      | api/metamorph/form/{entity}            |                                |                                                               |
+| GET,HEAD  | api/metamorph/forms                    |                                |                                                               |
+| POST      | api/metamorph/forms                    |                                |                                                               |
+| GET,HEAD  | api/metamorph/forms/{form}             |                                |                                                               |
+| PUT,PATCH | api/metamorph/forms/{form}             |                                |                                                               |
+| DELETE    | api/metamorph/forms/{form}             |                                |                                                               |
+| POST      | api/metamorph/many/search              |                                |                                                               |
+| POST      | api/metamorph/master/{entity}          | Create model entry             | `entity`: mapped model entity                                 |
+| GET,HEAD  | api/metamorph/master/{entity}/{id}     | Get model entry                | `entity`: mapped model entity <br/> `id`: model entity id     |
+| PUT,PATCH | api/metamorph/master/{entity}/{id}     | Update model entry             | `entity`: mapped model entity <br/> `id`: model entity id     |
+| DELETE    | api/metamorph/master/{entity}/{id}     | Delete model entry             | `entity`: mapped model entity <br/> `id`: model entity id     |
+| PATCH     | api/metamorph/reject/form-data/{id}    |                                |                                                               |
+| POST      | api/metamorph/resources/entities       |                                |                                                               |
+| POST      | api/metamorph/resources/entity/        |                                |                                                               |
+| POST      | api/metamorph/search/{entity}          | Lists models entries           | [See table below](#model-entry-list-request-parameters)       |
+| POST      | api/metamorph/validate/form-data/{id}  |                                |                                                               |
+
+#### Model entry list request parameters
+
+| Parameter         | Description                                                                                                                                                                                                                                                                                                 | Parameter type | Value type     | Default value |
+|:------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------|:---------------|:--------------|
+| `entity`          | mapped model entity                                                                                                                                                                                                                                                                                         | string         | url part param | _created_at_  |
+| `paginate`        | whether paginate request or not _i.e: 0,1_                                                                                                                                                                                                                                                                  | string, int    | query param    | _1_           |
+| `per_page`        | number of element per page _default                                                                                                                                                                                                                                                                         | int            | query param    | _15_          |
+| `order_by`        | order field                                                                                                                                                                                                                                                                                                 | string         | query param    | _created_at_  |
+| `order_direction` | order direction `order_by` _i.e : ASC, DESC_                                                                                                                                                                                                                                                                | string         | query param    | _ASC_         |
+| `randomize`       | whether result is randomize __Incompatible with paginate__                                                                                                                                                                                                                                                  | int, string    | query param    | _0_           |
+| `with_trash`      | whether result is with trashed entries                                                                                                                                                                                                                                                                      | int, string    | query param    | _0_           |
+| `only_trash`      | whether result is only trashed entries                                                                                                                                                                                                                                                                      | int, string    | query param    | _0_           |
+| `search`          | search criteria for the request <br/> _i.e: ```[{field: 'title', operator: 'like', value: 'lorem' }]```_ <br/> *available operator:*<br/> _=, !=, <, >, like, in, all, exists, elemMatch, size, regexp, type, mod, near, geoWithin, geoIntersects_<br/> **See [mongodb documentation]() for more operator** | object[ ]      | query param    | _[ ]_         |
+| `filter`          | Same as search                                                                                                                                                                                                                                                                                              | object[ ]      | query param    | _[ ]_         |
+
+
+## Advanced
+
+### Global Middleware
+
+### Model Middleware
+
+### Policies
 
 ## Changelog
 
