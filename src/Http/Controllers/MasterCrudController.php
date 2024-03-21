@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
+use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterStoreFormRequest;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterUpdateFormRequest;
 use CrucialDigital\Metamorph\Metamorph;
@@ -9,10 +10,9 @@ use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use MongoDB\Laravel\Eloquent\Builder;
-use MongoDB\Laravel\Eloquent\Model;
 
 class MasterCrudController extends Controller
 {
@@ -46,7 +46,7 @@ class MasterCrudController extends Controller
     public function store(StoreMasterStoreFormRequest $request, string $model): JsonResponse
     {
 
-        $policies = config('metamorph.policies.' . $model, []);
+        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
 
         if (in_array('create', $policies)) {
             Gate::authorize("create", config("metamorph.models.$model"));
@@ -83,7 +83,7 @@ class MasterCrudController extends Controller
         if ($with != null) $data = $data->with($with);
         $data = $data->firstOrFail();
 
-        $policies = config('metamorph.policies.' . $model, []);
+        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
 
         if (in_array('view', $policies)) {
             Gate::authorize("view", $data);
@@ -124,7 +124,7 @@ class MasterCrudController extends Controller
     {
         $entity = config('metamorph.models.' . $model)::findOrFail($id);
 
-        $policies = config('metamorph.policies.' . $model, []);
+        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
 
         if (in_array('update', $policies)) {
             Gate::authorize("update", $entity);
@@ -150,7 +150,7 @@ class MasterCrudController extends Controller
 
         $data = config('metamorph.models.' . $model)::findOrFail($id);
 
-        $policies = config('metamorph.policies.' . $model, []);
+        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
 
         if (in_array('delete', $policies)) {
             Gate::authorize("delete", $data);

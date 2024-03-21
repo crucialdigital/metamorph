@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Commands;
 
+use CrucialDigital\Metamorph\Config;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
@@ -29,7 +30,7 @@ class MakeInheritModel extends Command
      */
     public function handle(): int
     {
-        $dir = config('metamorph.model_dir', app_path('/Models/')) . "/";
+        $dir = Config::modelDir() . "/";
         if (file_exists( $dir . Str::ucfirst($this->argument('name')))) {
             $this->error('The model ' . Str::ucfirst($this->argument('name')) . ' already exists !');
             return self::FAILURE;
