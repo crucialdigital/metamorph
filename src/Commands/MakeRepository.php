@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Commands;
 
+use CrucialDigital\Metamorph\Config;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
@@ -32,7 +33,7 @@ class MakeRepository extends Command
             $this->error('Model is required');
             return self::FAILURE;
         }
-        $dir = config('metamorph.repository_dir', app_path('/Repositories')) . "/";
+        $dir = Config::repositoryDir() . "/";
         if (file_exists($dir . Str::ucfirst($this->argument('name')). '.php')) {
             $this->error('The repository ' . $dir . Str::ucfirst($this->argument('name')) . ' already exists !');
             return self::FAILURE;

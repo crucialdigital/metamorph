@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
+use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
@@ -14,6 +15,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -43,7 +45,7 @@ class SearchController extends Controller
     public function search(Request $request, $entity): JsonResponse
     {
 
-        $policies = config('metamorph.policies.' . $entity, []);
+        $policies = collect(Config::policies($entity))->map(fn($police)=> Str::lower($police))->toArray();
 
         if (in_array('viewany', $policies)) {
             Log::debug(Auth::user());
@@ -69,7 +71,7 @@ class SearchController extends Controller
     public function export($entity, $form): Response|BinaryFileResponse|JsonResponse
     {
 
-        $policies = config('metamorph.policies.' . $entity, []);
+        $policies = collect(Config::policies($entity))->map(fn($police)=> Str::lower($police))->toArray();
 
         if (in_array('viewany', $policies)) {
             Gate::authorize("viewAny", config("metamorph.models.$entity"));

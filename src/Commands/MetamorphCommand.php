@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Commands;
 
+use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\Models\MetamorphFormInput;
 use Illuminate\Console\Command;
@@ -16,7 +17,7 @@ class MetamorphCommand extends Command
     public function handle(): int
     {
         $name = $this->option('name');
-        $model_dir = config('metamorph.data_model_base_dir');
+        $model_dir = Config::dataModelBaseDir();
         $file_path = trim($model_dir . '/' . $name . '.json');
 
         $models = (isset($name) && $name != '' && file_exists($file_path))

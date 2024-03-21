@@ -221,29 +221,71 @@ Available endpoint are :
 | POST      | api/metamorph/search/{entity}          | Lists models entries           | [See table below](#model-entry-list-request-parameters)       |
 | POST      | api/metamorph/validate/form-data/{id}  |                                |                                                               |
 
+<br />
+
 #### Model entry list request parameters
 
-| Parameter         | Description                                                                                                                                                                                                                                                                                                 | Parameter type | Value type     | Default value |
-|:------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------|:---------------|:--------------|
-| `entity`          | mapped model entity                                                                                                                                                                                                                                                                                         | string         | url part param | _created_at_  |
-| `paginate`        | whether paginate request or not _i.e: 0,1_                                                                                                                                                                                                                                                                  | string, int    | query param    | _1_           |
-| `per_page`        | number of element per page _default                                                                                                                                                                                                                                                                         | int            | query param    | _15_          |
-| `order_by`        | order field                                                                                                                                                                                                                                                                                                 | string         | query param    | _created_at_  |
-| `order_direction` | order direction `order_by` _i.e : ASC, DESC_                                                                                                                                                                                                                                                                | string         | query param    | _ASC_         |
-| `randomize`       | whether result is randomize __Incompatible with paginate__                                                                                                                                                                                                                                                  | int, string    | query param    | _0_           |
-| `with_trash`      | whether result is with trashed entries                                                                                                                                                                                                                                                                      | int, string    | query param    | _0_           |
-| `only_trash`      | whether result is only trashed entries                                                                                                                                                                                                                                                                      | int, string    | query param    | _0_           |
-| `search`          | search criteria for the request <br/> _i.e: ```[{field: 'title', operator: 'like', value: 'lorem' }]```_ <br/> *available operator:*<br/> _=, !=, <, >, like, in, all, exists, elemMatch, size, regexp, type, mod, near, geoWithin, geoIntersects_<br/> **See [mongodb documentation]() for more operator** | object[ ]      | query param    | _[ ]_         |
-| `filter`          | Same as search                                                                                                                                                                                                                                                                                              | object[ ]      | query param    | _[ ]_         |
+<br />
+
+
+| Parameter         | Description                                                                                                                                                                                                                                                                                                                                                                                            | Parameter type | Value type     | Default value |
+|:------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------|:---------------|:--------------|
+| `entity`          | mapped model entity                                                                                                                                                                                                                                                                                                                                                                                    | string         | url part param | _created_at_  |
+| `paginate`        | whether paginate request or not _i.e: 0,1_                                                                                                                                                                                                                                                                                                                                                             | string, int    | query param    | _1_           |
+| `per_page`        | number of element per page _default                                                                                                                                                                                                                                                                                                                                                                    | int            | query param    | _15_          |
+| `order_by`        | order field                                                                                                                                                                                                                                                                                                                                                                                            | string         | query param    | _created_at_  |
+| `order_direction` | order direction `order_by` _i.e : ASC, DESC_                                                                                                                                                                                                                                                                                                                                                           | string         | query param    | _ASC_         |
+| `randomize`       | whether result is randomize __Incompatible with paginate__                                                                                                                                                                                                                                                                                                                                             | int, string    | query param    | _0_           |
+| `with_trash`      | whether result is with trashed entries                                                                                                                                                                                                                                                                                                                                                                 | int, string    | query param    | _0_           |
+| `only_trash`      | whether result is only trashed entries                                                                                                                                                                                                                                                                                                                                                                 | int, string    | query param    | _0_           |
+| `search`          | search criteria for the request <br/> _i.e: ```[{field: 'title', operator: 'like', value: 'lorem' }]```_ <br/> *available operator:*<br/> _=, !=, <, >, like, in, all, exists, elemMatch, size, regexp, type, mod, near, geoWithin, geoIntersects_<br/> **See [Mongodb query and projection operators documentation](https://www.mongodb.com/docs/rapid/reference/operator/query/) for more operator** | object[ ]      | query param    | _[ ]_         |
+| `filter`          | Same as search                                                                                                                                                                                                                                                                                                                                                                                         | object[ ]      | query param    | _[ ]_         |
 
 
 ## Advanced
 
 ### Global Middleware
 
-### Model Middleware
+To define global middleware for all metamorph routes, in metamorph config file, `config/metamorph.php`
+fill the ``middlewares`` array with your middlewares
+```
+//config/metamorph.php
+...
+'middlewares' => ['auth:sanctum', 'verified'],
+...
+```
+>If you are using [Laravel Sanctum](https://laravel.com/docs/11.x/sanctum) for authentification,
+>don't forget to add the middleware `auth:sanctum` to avoid trouble with [Metamorph authorisation system](#policies)
 
+### Model Middleware
+Beyond global middleware you can't define individual middleware for every model route and for each controller action
+in metamorph config file, `config/metamorph.php`
+fill the ``model_middlewares`` array with your middlewares
+```
+//config/metamorph.php
+...
+'model_middlewares' => [
+    'post' => [
+        'App\Http\Middleware\EnsureUserIsOwner::class' => '*', //Protect all CRUD action with the middleware for posts
+        'isOwner' => ['destroy', 'update'] //Prevent non owner from deleting and updating posts
+    ]
+],
+...
+```
 ### Policies
+To authorize model controller action with police authorization,
+in metamorph config file, `config/metamorph.php`
+fill the ``policies`` array with the policy actions associate with your models
+```
+//config/metamorph.php
+...
+'policies' => [
+    'post' => ['viewany', 'view', 'create', 'update', 'delete'],
+    'user' => ['viewany', 'view', 'create', 'update', 'delete'],
+    ...
+ ],
+...
+```
 
 ## Changelog
 

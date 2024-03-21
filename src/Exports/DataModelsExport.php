@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Exports;
 
+use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -81,8 +82,8 @@ class DataModelsExport implements FromCollection, WithHeadings
 
     private function _makeBuilder($entity): ?Builder
     {
-        $model = config('metamorph.models.' . $entity);
-        $repository = config('metamorph.repositories.' . $entity);
+        $model = Config::models($entity);
+        $repository = Config::repositories($entity);
 
         if ($repository && class_exists($repository)) {
             if (!(new $repository instanceof DataRepositoryBuilder)) {

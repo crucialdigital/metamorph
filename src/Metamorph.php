@@ -20,7 +20,7 @@ class Metamorph
             return [];
         }
 
-        $extras = config('metamorph.models.' . $form_data['entity'])::extraFields() ?? [];
+        $extras = Config::models( $form_data['entity'])::extraFields() ?? [];
 
         $form_inputs = $form['inputs'];
 
@@ -67,7 +67,7 @@ class Metamorph
             }
             if (isset($input['field']) && isset($input['type']) && in_array($input['type'], ['file', 'photo'])) {
                 if ($request->hasFile($input['field']) && $request->file($input['field'])->isValid()) {
-                    $path = config('metamorph.upload_path') . '/' . $form['entity'] . '/' . now()->format('mY') . '/' . $input['field'] . '/';
+                    $path = Config::uploadPath() . '/' . $form['entity'] . '/' . now()->format('mY') . '/' . $input['field'] . '/';
                     $file_full_name = $file_name . '.' . $request->file($input['field'])->getClientOriginalExtension();
                     $tmp_name = time() . '_' . $file_full_name;
                     $tmp_full_path = public_path('tmp/' . $tmp_name);

@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Commands;
 
+use CrucialDigital\Metamorph\Config;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
@@ -32,7 +33,7 @@ class MakeDataModel extends Command
             $this->error('Name is required');
             return self::FAILURE;
         }
-        $dir = config('metamorph.data_model_base_dir', database_path('/models')) . "/";
+        $dir = Config::dataModelBaseDir() . "/";
         if (file_exists($dir . Str::slug($this->argument('name')). '.json')) {
             $this->error('The data model ' . $dir . Str::ucfirst($this->argument('name')) . ' already exists !');
             return self::FAILURE;
