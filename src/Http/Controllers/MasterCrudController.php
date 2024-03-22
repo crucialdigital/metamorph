@@ -10,6 +10,7 @@ use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use MongoDB\Laravel\Eloquent\Builder;
@@ -46,7 +47,7 @@ class MasterCrudController extends Controller
     public function store(StoreMasterStoreFormRequest $request, string $model): JsonResponse
     {
 
-        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('create', $policies)) {
             Gate::authorize("create", config("metamorph.models.$model"));
@@ -78,12 +79,12 @@ class MasterCrudController extends Controller
         /**
          * @var Builder $data
          */
-        $data = config('metamorph.models.' . $model)::where('_id', '=', $id);
+        $data = Config::models($model)::where('_id', '=', $id);
         $with = ResourceQueryLoader::makeRelations($data);
         if ($with != null) $data = $data->with($with);
         $data = $data->firstOrFail();
 
-        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('view', $policies)) {
             Gate::authorize("view", $data);
@@ -97,13 +98,13 @@ class MasterCrudController extends Controller
                     return in_array($input['type'], ['resource', 'multiresource', 'selectresource']);
                 })->map(function ($el) use ($data) {
                     try {
-                        $res = config('metamorph.models.' . $el['entity'])::find($data[$el['field']]);
+                        $res = Config::models($el['entity'])::find($data[$el['field']]);
                     } catch (Exception $e) {
                         $res = null;
                     }
                     return [
                         'label' => $el['field'],
-                        'value' => $res ? $res->getAttribute(config('metamorph.models.' . $el['entity'])::label()) : ''
+                        'value' => $res ? $res->getAttribute(Config::models($el['entity'])::label()) : ''
                     ];
                 });
 
@@ -122,9 +123,8 @@ class MasterCrudController extends Controller
      */
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
-        $entity = config('metamorph.models.' . $model)::findOrFail($id);
-
-        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
+        $entity = Config::models($model)::findOrFail($id);
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('update', $policies)) {
             Gate::authorize("update", $entity);
@@ -148,9 +148,9 @@ class MasterCrudController extends Controller
     public function destroy(string $model, string $id): JsonResponse
     {
 
-        $data = config('metamorph.models.' . $model)::findOrFail($id);
+        $data = Config::models( $model)::findOrFail($id);
 
-        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('delete', $policies)) {
             Gate::authorize("delete", $data);
