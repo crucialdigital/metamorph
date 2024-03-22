@@ -7,12 +7,12 @@ use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -45,7 +45,7 @@ class SearchController extends Controller
     public function search(Request $request, $entity): JsonResponse
     {
 
-        $policies = collect(Config::policies($entity))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('viewany', $policies)) {
             Log::debug(Auth::user());
@@ -55,7 +55,14 @@ class SearchController extends Controller
         $builder = $this->_makeBuilder($entity);
 
         if ($builder != null) {
-            $data = (new ResourceQueryLoader($builder))->load();
+            $data = null;
+            if (!(bool)$request->query('paginate')) {
+                Cache::remember($entity, 600, function () use (&$data, $builder) {
+                    $data = (new ResourceQueryLoader($builder))->load();
+                });
+            } else {
+                $data = (new ResourceQueryLoader($builder))->load();
+            }
             return response()->json($data);
         } else {
             return response()->json(null, 404);
@@ -71,7 +78,7 @@ class SearchController extends Controller
     public function export($entity, $form): Response|BinaryFileResponse|JsonResponse
     {
 
-        $policies = collect(Config::policies($entity))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('viewany', $policies)) {
             Gate::authorize("viewAny", config("metamorph.models.$entity"));
