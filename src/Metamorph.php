@@ -4,6 +4,7 @@ namespace CrucialDigital\Metamorph;
 
 use Countable;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
+use CrucialDigital\Metamorph\Models\MetamorphFormInput;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -58,6 +59,9 @@ class Metamorph
         $return = [];
         $form = MetamorphForm::find($form_id);
         if (!isset($form)) return $return;
+        /**
+         * @var MetamorphFormInput[] $form_inputs
+         */
         $form_inputs = $form->inputs()->whereIn('type', ['file', 'photo'])->get();
 
         foreach ($form_inputs as $input) {

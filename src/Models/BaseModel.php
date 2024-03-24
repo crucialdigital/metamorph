@@ -16,7 +16,7 @@ use MongoDB\Operation\FindOneAndUpdate;
  * @method static Model|self first()
  * @method static findOrFail(string $id)
  * @method static Model firstOrCreate(array $search, array $attributes = [])
- * @method static Model find(string $id)
+ * @method static Model|mixed find(string $id)
  * @method static Model updateOrCreate(array $search, array $attributes = [])
  * @method static Model create(array $attributes)
  * @method static Builder|Model where(string $column, string $operator = '=', mixed|null $value = null)
