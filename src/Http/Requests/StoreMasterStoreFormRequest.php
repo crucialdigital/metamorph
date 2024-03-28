@@ -58,6 +58,8 @@ class StoreMasterStoreFormRequest extends FormRequest
             'tel' => ['string'],
             'email' => ['string', 'email'],
             'date' => ['date'],
+            'datetime' => ['datetime'],
+            'time' => ['datetime'],
             'photo' => ['file'],
             'file' => ['file'],
             'geopoint' => ['string'],
