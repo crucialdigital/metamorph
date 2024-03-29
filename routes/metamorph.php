@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('api/' . Config::routePrefix())
     ->middleware(['api'])->group(function () {
-    Route::middleware(config('metamorph.middlewares'))->group(function () {
+    Route::middleware(Config::globalMiddleware())->group(function () {
         Route::post('/search/{entity}', [SearchController::class, 'search']);
         Route::post('/many/search', [SearchController::class, 'findAll']);
         Route::post('/exports/{entity}/{form}', [SearchController::class, 'export']);

@@ -20,7 +20,7 @@ class MasterCrudController extends Controller
     public function __construct()
     {
         $model = request()->route('entity');
-        $middlewares = config('metamorph.model_middlewares', []);
+        $middlewares = Config::modelMiddleware($model);
         if (isset($middlewares[$model])) {
             foreach ($middlewares[$model] as $middleware => $only) {
                 if (is_string($only) && $only == '*') {

@@ -54,6 +54,15 @@ class Config
     /**
      * @return mixed
      */
+    public static function resources(): mixed
+    {
+        return config('metamorph.resources', []);
+    }
+
+
+    /**
+     * @return mixed
+     */
     public static function dataModelBaseDir(): mixed
     {
         return config("metamorph.data_model_base_dir");

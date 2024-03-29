@@ -50,7 +50,7 @@ class StoreMasterStoreFormRequest extends FormRequest
         $type_match = [
             'text' => ['string'],
             'longtext' => ['string'],
-            'select' => ['string'],
+            'select' => [],
             'multiselect' => ['array'],
             'resource' => ['string'],
             'number' => ['numeric'],
