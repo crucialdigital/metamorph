@@ -56,11 +56,13 @@ class MasterCrudController extends Controller
 
         $entity = config('metamorph.models.' . $model)::create($formData);
 
-        $entity?->fill(Metamorph::mapFormRequestFiles(
-            $request,
-            $entity->_id,
-            $request->input('form_id')
-        ))->save();
+        if($entity && $entity->_id){
+            $entity->fill(Metamorph::mapFormRequestFiles(
+                $request,
+                $entity->_id,
+                $request->input('form_id')
+            ))->save();
+        }
 
         return response()->json($entity->fresh());
 
