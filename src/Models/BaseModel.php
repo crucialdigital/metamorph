@@ -4,6 +4,7 @@ namespace CrucialDigital\Metamorph\Models;
 
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use MongoDB\Laravel\Eloquent\Builder;
 use MongoDB\Laravel\Eloquent\Model;
 use MongoDB\Laravel\Relations\EmbedsMany;
@@ -12,7 +13,7 @@ use MongoDB\Operation\FindOneAndUpdate;
 
 /**
  * @property-read string $_id
- * @property-read string $ref
+ * @property string $ref
  * @method static Model|self first()
  * @method static findOrFail(string $id)
  * @method static Model firstOrCreate(array $search, array $attributes = [])
@@ -58,13 +59,13 @@ abstract class BaseModel extends Model
     public function nextId()
     {
         // ref is the counter - change it to whatever you want to increment
-        $this->ref = self::getID();
+        $this->ref = self::getID($this->getTable());
     }
 
     public static function bootUseAutoIncrementID()
     {
         static::creating(function ($model) {
-            $model->sequencial_id = self::getID($model->getTable());
+            $model->sequencial_id = self::getID($this->getTable());
         });
     }
 
@@ -73,10 +74,10 @@ abstract class BaseModel extends Model
         return $this->casts;
     }
 
-    private static function getID()
+    private static function getID($ref)
     {
         $seq = DB::connection(config('database.default'))->getCollection('counters')->findOneAndUpdate(
-            ['ref' => 'ref'],
+            ['ref' => $ref],
             ['$inc' => ['seq' => 1]],
             ['new' => true, 'upsert' => true, 'returnDocument' => FindOneAndUpdate::RETURN_DOCUMENT_AFTER]
         );
@@ -133,5 +134,10 @@ abstract class BaseModel extends Model
         $attribute = $this->getAttribute($key);
 
         return ((new $model)->newInstance($attribute, true))->toArray();
+    }
+
+    public function getTable(): string
+    {
+        return $this->collection ?? Str::snake(Str::pluralStudly(class_basename($this)));
     }
 }
