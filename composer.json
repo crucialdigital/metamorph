@@ -77,7 +77,7 @@
         },
         "branch-alias": {
             "dev-dev": "1.0.x-dev",
-            "dev-master": "master-dev"
+            "dev-master": "2.0.x-dev"
         }
     },
     "minimum-stability": "stable",
