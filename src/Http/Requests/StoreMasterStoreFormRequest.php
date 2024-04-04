@@ -50,7 +50,7 @@ class StoreMasterStoreFormRequest extends FormRequest
         $type_match = [
             'text' => ['string'],
             'longtext' => ['string'],
-            'select' => ['string'],
+            'select' => [],
             'multiselect' => ['array'],
             'resource' => ['string'],
             'number' => ['numeric'],
@@ -58,6 +58,7 @@ class StoreMasterStoreFormRequest extends FormRequest
             'tel' => ['string'],
             'email' => ['string', 'email'],
             'date' => ['date'],
+            'datetime' => ['date'],
             'photo' => ['file'],
             'file' => ['file'],
             'geopoint' => ['string'],

@@ -20,7 +20,7 @@ class MasterCrudController extends Controller
     public function __construct()
     {
         $model = request()->route('entity');
-        $middlewares = config('metamorph.model_middlewares', []);
+        $middlewares = Config::modelMiddleware($model);
         if (isset($middlewares[$model])) {
             foreach ($middlewares[$model] as $middleware => $only) {
                 if (is_string($only) && $only == '*') {
@@ -46,7 +46,7 @@ class MasterCrudController extends Controller
     public function store(StoreMasterStoreFormRequest $request, string $model): JsonResponse
     {
 
-        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('create', $policies)) {
             Gate::authorize("create", config("metamorph.models.$model"));
@@ -56,11 +56,13 @@ class MasterCrudController extends Controller
 
         $entity = config('metamorph.models.' . $model)::create($formData);
 
-        $entity?->fill(Metamorph::mapFormRequestFiles(
-            $request,
-            $entity->_id,
-            $request->input('form_id')
-        ))->save();
+        if($entity && $entity->_id){
+            $entity->fill(Metamorph::mapFormRequestFiles(
+                $request,
+                $entity->_id,
+                $request->input('form_id')
+            ))->save();
+        }
 
         return response()->json($entity->fresh());
 
@@ -78,12 +80,12 @@ class MasterCrudController extends Controller
         /**
          * @var Builder $data
          */
-        $data = config('metamorph.models.' . $model)::where('_id', '=', $id);
+        $data = Config::models($model)::where('_id', '=', $id);
         $with = ResourceQueryLoader::makeRelations($data);
         if ($with != null) $data = $data->with($with);
         $data = $data->firstOrFail();
 
-        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('view', $policies)) {
             Gate::authorize("view", $data);
@@ -97,13 +99,13 @@ class MasterCrudController extends Controller
                     return in_array($input['type'], ['resource', 'multiresource', 'selectresource']);
                 })->map(function ($el) use ($data) {
                     try {
-                        $res = config('metamorph.models.' . $el['entity'])::find($data[$el['field']]);
+                        $res = Config::models($el['entity'])::find($data[$el['field']]);
                     } catch (Exception $e) {
                         $res = null;
                     }
                     return [
                         'label' => $el['field'],
-                        'value' => $res ? $res->getAttribute(config('metamorph.models.' . $el['entity'])::label()) : ''
+                        'value' => $res ? $res->getAttribute(Config::models($el['entity'])::label()) : ''
                     ];
                 });
 
@@ -122,9 +124,8 @@ class MasterCrudController extends Controller
      */
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
-        $entity = config('metamorph.models.' . $model)::findOrFail($id);
-
-        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
+        $entity = Config::models($model)::findOrFail($id);
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('update', $policies)) {
             Gate::authorize("update", $entity);
@@ -148,9 +149,9 @@ class MasterCrudController extends Controller
     public function destroy(string $model, string $id): JsonResponse
     {
 
-        $data = config('metamorph.models.' . $model)::findOrFail($id);
+        $data = Config::models( $model)::findOrFail($id);
 
-        $policies = collect(Config::policies($model))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('delete', $policies)) {
             Gate::authorize("delete", $data);

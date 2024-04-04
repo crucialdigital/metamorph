@@ -2,7 +2,8 @@
 
 namespace CrucialDigital\Metamorph\Models;
 /**
- * @property string $type
+ * @property string|null $type
+ * @property string|null $field
  */
 
 class MetamorphFormInput extends BaseModel

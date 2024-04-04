@@ -3,6 +3,7 @@
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
 
+use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +19,7 @@ class MetamorphFormResourcesController extends Controller
      */
     public function entities(): JsonResponse
     {
-        $r = collect(config('metamorph.resources', []));
+        $r = collect(Config::resources());
         $r = array_values($r->sortBy('label')->toArray());
         return response()->json($r);
     }
@@ -26,8 +27,8 @@ class MetamorphFormResourcesController extends Controller
     public function fetchResources(Request $request, $entity): JsonResponse
     {
 
-        $model = config('metamorph.models.' . $entity);
-        $repository = config('metamorph.repositories.' . $entity);
+        $model = Config::models( $entity);
+        $repository = Config::repositories($entity);
 
         $repository = class_exists($repository) ? (new $repository)->builder() : $model::where('_id', 'exists', true);
 
