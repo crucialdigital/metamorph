@@ -129,17 +129,16 @@ class ResourceQueryLoader
                 $operator = $query['operator'] ?? '=';
                 $value = $query['value'] ?? null;
                 if ($field != null) {
-                    if ($field != '_id') {
-                        if (Str::upper($operator) == 'LIKE') {
-                            $this->builder = $this->builder->where($field, 'LIKE', '%' . $value . '%');
-                        } elseif (Str::upper($operator) == 'IN') {
-                            $value = is_array($value) ? $value : [$value];
-                            $this->builder = $this->builder->whereIn($field, $value);
-                        } else {
-                            $this->builder = $this->builder->where($field, $operator, $value);
-                        }
+                    if (Str::upper($operator) == 'LIKE') {
+                        $this->builder = $this->builder->where($field, 'LIKE', '%' . $value . '%');
+                    } elseif (Str::upper($operator) == 'IN') {
+                        $value = is_array($value) ? $value : [$value];
+                        $this->builder = $this->builder->whereIn($field, $value);
+                    }  elseif (Str::upper($operator) == 'NOTIN') {
+                        $value = is_array($value) ? $value : [$value];
+                        $this->builder = $this->builder->whereNotIn($field, $value);
                     } else {
-                        $this->builder = $this->builder->where('_id', '=', $value);
+                        $this->builder = $this->builder->where($field, $operator, $value);
                     }
                 }
             }
