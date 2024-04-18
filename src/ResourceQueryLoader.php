@@ -3,6 +3,7 @@
 
 namespace CrucialDigital\Metamorph;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
@@ -78,6 +79,13 @@ class ResourceQueryLoader
     private function search(mixed $search)
     {
         $queries = (!is_array($search)) ? json_decode($search, true) : $search;
+        $term = request()->query('term');
+        if (isset($term)) {
+            $columns = $this->builder->getModel()::class::search() ?? [];
+            foreach ($columns as $column) {
+                $queries[$column] = $term;
+            }
+        }
         if ($queries != null && count($queries) > 0) {
             $this->builder = $this->builder->where(function ($builder) use ($queries) {
                 $i = 0;
@@ -99,21 +107,6 @@ class ResourceQueryLoader
                 }
             });
         }
-        $term = request()->query('term');
-        if (isset($term)) {
-            $columns = $this->builder->getModel()::class::search() ?? [];
-            if (count($columns)) {
-                $this->builder->where(function (Builder $query) use ($columns, $term) {
-                    foreach ($columns as $k => $column) {
-                        if ($k == 0) {
-                            $query->where($column, 'LIKE', '%' . $term . '%');
-                        } else {
-                            $query->orWhere($column, 'LIKE', '%' . $term . '%');
-                        }
-                    }
-                });
-            }
-        }
     }
 
     /**
@@ -129,16 +122,42 @@ class ResourceQueryLoader
                 $operator = $query['operator'] ?? '=';
                 $value = $query['value'] ?? null;
                 if ($field != null) {
-                    if (Str::upper($operator) == 'LIKE') {
-                        $this->builder = $this->builder->where($field, 'LIKE', '%' . $value . '%');
-                    } elseif (Str::upper($operator) == 'IN') {
-                        $value = is_array($value) ? $value : [$value];
-                        $this->builder = $this->builder->whereIn($field, $value);
-                    }  elseif (Str::upper($operator) == 'NOTIN') {
-                        $value = is_array($value) ? $value : [$value];
-                        $this->builder = $this->builder->whereNotIn($field, $value);
-                    } else {
-                        $this->builder = $this->builder->where($field, $operator, $value);
+                    switch (Str::upper($operator)) {
+                        case 'LIKE':
+                            $this->builder = $this->builder->where($field, 'LIKE', '%' . $value . '%');
+                            break;
+                        case 'IN':
+                            $value = is_array($value) ? $value : [$value];
+                            $this->builder = $this->builder->whereIn($field, $value);
+                            break;
+                        case 'NOTIN':
+                            $value = is_array($value) ? $value : [$value];
+                            $this->builder = $this->builder->whereNotIn($field, $value);
+                            break;
+                        case 'BETWEEN':
+                            $value = is_array($value) ? $value : [$value, $value];
+                            $this->builder = $this->builder->whereBetween($field, $value);
+                            break;
+                        case 'NOTBETWEEN':
+                            $value = is_array($value) ? $value : [$value, $value];
+                            $this->builder = $this->builder->whereNotBetween($field, $value);
+                            break;
+                        case 'DATE':
+                            $this->builder = $this->builder->whereDate($field, '=', $value);
+                            break;
+                        case 'DATENOT':
+                            $this->builder = $this->builder->whereDate($field, '!=', $value);
+                            break;
+                        case 'DATEBETWEEN':
+                            $value = $this->getDateArrayValue($value);
+                            $this->builder = $this->builder->whereBetween($field, $value);
+                            break;
+                        case 'DATENOTBETWEEN':
+                            $value = $this->getDateArrayValue($value);
+                            $this->builder = $this->builder->whereNotBetween($field, $value);
+                            break;
+                        default:
+                            $this->builder = $this->builder->where($field, $operator, $value);
                     }
                 }
             }
@@ -161,6 +180,24 @@ class ResourceQueryLoader
         return count($with) > 0 ? collect($with)->filter(function ($relation) use (&$builder) {
             return method_exists(get_class($builder->getModel()), $relation);
         })->toArray() : null;
+    }
+
+    /**
+     * @param mixed $value
+     * @return Carbon[]
+     */
+    protected function getDateArrayValue(mixed $value): array
+    {
+        if (is_array($value)) {
+            if (count($value) >= 2) {
+                $value = [new Carbon($value[0]), new  Carbon($value[1])];
+            } else {
+                $value = [new Carbon($value[0] ?? null), new  Carbon($value[0] ?? null)];
+            }
+        } else {
+            $value = [new Carbon($value), new  Carbon($value)];
+        }
+        return $value;
     }
 
 }
