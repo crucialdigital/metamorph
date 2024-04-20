@@ -214,6 +214,7 @@ class ResourceQueryLoader
                 break;
             case 'DATEAFTER':
                 $builder->whereDate($field, '>', $value);
+                break;
             case 'DATEBEFOREQ':
                 $builder->whereDate($field, '<=', $value);
                 break;
