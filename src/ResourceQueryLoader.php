@@ -87,7 +87,7 @@ class ResourceQueryLoader
             }
         }
         if ($queries != null && count($queries) > 0) {
-            $this->builder = $this->builder->where(function ($builder) use ($queries) {
+            $this->builder->where(function ($builder) use ($queries) {
                 $i = 0;
                 foreach ($queries as $k => $query) {
                     if ($i == 0) {
@@ -122,42 +122,10 @@ class ResourceQueryLoader
                 $operator = $query['operator'] ?? '=';
                 $value = $query['value'] ?? null;
                 if ($field != null) {
-                    switch (Str::upper($operator)) {
-                        case 'LIKE':
-                            $this->builder = $this->builder->where($field, 'LIKE', '%' . $value . '%');
-                            break;
-                        case 'IN':
-                            $value = is_array($value) ? $value : [$value];
-                            $this->builder = $this->builder->whereIn($field, $value);
-                            break;
-                        case 'NOTIN':
-                            $value = is_array($value) ? $value : [$value];
-                            $this->builder = $this->builder->whereNotIn($field, $value);
-                            break;
-                        case 'BETWEEN':
-                            $value = is_array($value) ? $value : [$value, $value];
-                            $this->builder = $this->builder->whereBetween($field, $value);
-                            break;
-                        case 'NOTBETWEEN':
-                            $value = is_array($value) ? $value : [$value, $value];
-                            $this->builder = $this->builder->whereNotBetween($field, $value);
-                            break;
-                        case 'DATE':
-                            $this->builder = $this->builder->whereDate($field, '=', $value);
-                            break;
-                        case 'DATENOT':
-                            $this->builder = $this->builder->whereDate($field, '!=', $value);
-                            break;
-                        case 'DATEBETWEEN':
-                            $value = $this->getDateArrayValue($value);
-                            $this->builder = $this->builder->whereBetween($field, $value);
-                            break;
-                        case 'DATENOTBETWEEN':
-                            $value = $this->getDateArrayValue($value);
-                            $this->builder = $this->builder->whereNotBetween($field, $value);
-                            break;
-                        default:
-                            $this->builder = $this->builder->where($field, $operator, $value);
+                    if(str_contains($field, '.')){
+                        $this->builder->whereHas($field);
+                    }else{
+                        $this->bindQuery($field, $operator, $value);
                     }
                 }
             }
@@ -198,6 +166,53 @@ class ResourceQueryLoader
             $value = [new Carbon($value), new  Carbon($value)];
         }
         return $value;
+    }
+
+    /**
+     * @param $field
+     * @param $operator
+     * @param $value
+     * @return void
+     */
+    protected function bindQuery($field, $operator, $value)
+    {
+        switch (Str::upper($operator)) {
+            case 'LIKE':
+                $this->builder->where($field, 'LIKE', '%' . $value . '%');
+                break;
+            case 'IN':
+                $value = is_array($value) ? $value : [$value];
+                $this->builder->whereIn($field, $value);
+                break;
+            case 'NOTIN':
+                $value = is_array($value) ? $value : [$value];
+                $this->builder->whereNotIn($field, $value);
+                break;
+            case 'BETWEEN':
+                $value = is_array($value) ? $value : [$value, $value];
+                $this->builder->whereBetween($field, $value);
+                break;
+            case 'NOTBETWEEN':
+                $value = is_array($value) ? $value : [$value, $value];
+                $this->builder->whereNotBetween($field, $value);
+                break;
+            case 'DATE':
+                $this->builder->whereDate($field, '=', $value);
+                break;
+            case 'DATENOT':
+                $this->builder->whereDate($field, '!=', $value);
+                break;
+            case 'DATEBETWEEN':
+                $value = $this->getDateArrayValue($value);
+                $this->builder->whereBetween($field, $value);
+                break;
+            case 'DATENOTBETWEEN':
+                $value = $this->getDateArrayValue($value);
+                $this->builder->whereNotBetween($field, $value);
+                break;
+            default:
+                $this->builder->where($field, $operator, $value);
+        }
     }
 
 }
