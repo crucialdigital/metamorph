@@ -137,6 +137,7 @@ class ResourceQueryLoader
         }
     }
 
+
     /**
      * @param $builder
      * @return array|null
