@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
+use Countable;
 use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterStoreFormRequest;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterUpdateFormRequest;
@@ -56,7 +57,7 @@ class MasterCrudController extends Controller
 
         $entity = config('metamorph.models.' . $model)::create($formData);
 
-        if($entity && $entity->_id){
+        if ($entity && $entity->_id) {
             $entity->fill(Metamorph::mapFormRequestFiles(
                 $request,
                 $entity->_id,
@@ -103,9 +104,16 @@ class MasterCrudController extends Controller
                     } catch (Exception $e) {
                         $res = null;
                     }
+                    if ($res instanceof Countable) {
+                        $value = join(', ', collect($res)->map(function ($entry) use ($el) {
+                            return $entry->getAttribute(Config::models($el['entity'])::label());
+                        })->values()->toArray());
+                    }else{
+                        $value = $res ? $res->getAttribute(Config::models($el['entity'])::label()) : '';
+                    }
                     return [
                         'label' => $el['field'],
-                        'value' => $res ? $res->getAttribute(Config::models($el['entity'])::label()) : ''
+                        'value' => $value
                     ];
                 });
 
@@ -149,7 +157,7 @@ class MasterCrudController extends Controller
     public function destroy(string $model, string $id): JsonResponse
     {
 
-        $data = Config::models( $model)::findOrFail($id);
+        $data = Config::models($model)::findOrFail($id);
 
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
