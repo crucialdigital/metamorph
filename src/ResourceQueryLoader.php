@@ -40,6 +40,10 @@ class ResourceQueryLoader
         if ($filters) {
             $this->filter($filters);
         }
+        $select = request()->input('columns', ['*']);
+
+        $this->builder = $this->builder->select($select);
+
         $this->builder = $this->builder->orderBy($order_by, $order_direction);
 
         if ($only_trash) {
@@ -135,6 +139,7 @@ class ResourceQueryLoader
                 }
             }
         }
+        //todo: grouped and sub query, (and, or) support
     }
 
 
