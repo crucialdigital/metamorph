@@ -265,9 +265,9 @@ class ResourceQueryLoader
         $field = $input['field'] ?? null;
         $operator = $input['operator'] ?? '=';
         $value = $input['value'] ?? null;
-        $coordination = (isset($input['coordination'])
-            && in_array(Str::lower($input['coordination']), ['and', 'or']))
-            ? $input['coordination']
+        $coordinator = (isset($input['coordinator'])
+            && in_array(Str::lower($input['coordinator']), ['and', 'or']))
+            ? $input['coordinator']
             : 'and';
 
         if ($field != null) {
@@ -275,11 +275,11 @@ class ResourceQueryLoader
                 $parts = explode('.', $field);
                 $last = array_pop($parts);
                 $relations = implode('.', $parts);
-                $builder->whereHas($relations, function (Builder $builder) use ($last, $operator, $value, $coordination) {
-                    $this->bindQuery($last, $operator, $value, $coordination, $builder);
+                $builder->whereHas($relations, function (Builder $builder) use ($last, $operator, $value, $coordinator) {
+                    $this->bindQuery($last, $operator, $value, $coordinator, $builder);
                 });
             } else {
-                $this->bindQuery($field, $operator, $value, $coordination, $builder);
+                $this->bindQuery($field, $operator, $value, $coordinator, $builder);
             }
         }
     }
