@@ -1,5 +1,6 @@
 {
     "name": "crucialdigital/metamorph",
+    "version": "1.0.2",
     "description": "Package of data models managements",
     "keywords": [
         "crucialdigital",
