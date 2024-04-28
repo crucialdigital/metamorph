@@ -40,6 +40,10 @@ class ResourceQueryLoader
         if ($filters) {
             $this->filter($filters);
         }
+        $select = request()->input('columns', ['*']);
+
+        $this->builder = $this->builder->select($select);
+
         $this->builder = $this->builder->orderBy($order_by, $order_direction);
 
         if ($only_trash) {
@@ -110,29 +114,37 @@ class ResourceQueryLoader
     }
 
     /**
-     * @param $filters
+     * @param $queries
      * @return void
      */
-    private function filter($filters)
+    private function filter($queries)
     {
-        $queries = (!is_array($filters)) ? json_decode($filters, false) : $filters;
-        if ($queries !== null && count($queries) > 0) {
-            foreach ($queries as $query) {
-                $field = $query['field'] ?? null;
-                $operator = $query['operator'] ?? '=';
-                $value = $query['value'] ?? null;
-                if ($field != null) {
-                    if (str_contains($field, '.')) {
-                        $parts = explode('.', $field);
-                        $last = array_pop($parts);
-                        $relations = implode('.', $parts);
-                        $this->builder->whereHas($relations, function (Builder $builder) use ($last, $operator, $value) {
-                            $this->bindQuery($last, $operator, $value, $builder);
-                        });
-                    } else {
-                        $this->bindQuery($field, $operator, $value);
+        $filters = (is_string($queries)) ? json_decode($queries, false) : $queries;
+
+
+        if ($filters !== null && count($filters) > 0) {
+            $global_filters = collect($filters)->where(function ($filter) {
+                return !isset($filter['group']) || $filter['group'] == null || $filter['group'] == '';
+            });
+            foreach ($global_filters as $global_filter) {
+                $this->bindFieldFilter($global_filter);
+            }
+
+            $grouped_filters = collect($filters)->where(function ($filter) {
+                return isset($filter['group']) && $filter['group'] != null && $filter['group'] == '';
+            })->groupBy('group');
+            foreach ($grouped_filters as $group => $group_filters) {
+                $groupCoordinator = explode('_', $group)[0];
+
+                $groupCoordinator = in_array(Str::lower($groupCoordinator), ['and', 'or'])
+                    ? Str::lower($groupCoordinator)
+                    : 'and';
+
+                $this->builder->where(function (Builder $builder) use ($group_filters) {
+                    foreach ($group_filters as $group_filter) {
+                        $this->bindFieldFilter($group_filter, $builder);
                     }
-                }
+                }, boolean: $groupCoordinator);
             }
         }
     }
@@ -178,62 +190,97 @@ class ResourceQueryLoader
      * @param $field
      * @param $operator
      * @param $value
+     * @param string $coordinator
      * @param Builder|null $builder
      * @return void
      */
-    protected function bindQuery($field, $operator, $value, Builder $builder = null)
+    protected function bindQuery($field, $operator, $value, string $coordinator = 'and', Builder $builder = null)
     {
-        if($builder == null){
+        if ($builder == null) {
+            //In case of relation sub-query, don't use the global builder
             $builder = $this->builder;
         }
         switch (Str::upper($operator)) {
             case 'LIKE':
-                $builder->where($field, 'LIKE', '%' . $value . '%');
+                $builder->where($field, 'LIKE', '%' . $value . '%', Str::lower($coordinator));
                 break;
             case 'IN':
                 $value = is_array($value) ? $value : [$value];
-                $builder->whereIn($field, $value);
+                $builder->whereIn($field, $value, Str::lower($coordinator));
                 break;
             case 'NOTIN':
                 $value = is_array($value) ? $value : [$value];
-                $builder->whereNotIn($field, $value);
+                $builder->whereNotIn($field, $value, Str::lower($coordinator));
                 break;
             case 'BETWEEN':
                 $value = is_array($value) ? $value : [$value, $value];
-                $builder->whereBetween($field, $value);
+                $builder->whereBetween($field, $value, Str::lower($coordinator));
                 break;
             case 'NOTBETWEEN':
                 $value = is_array($value) ? $value : [$value, $value];
-                $builder->whereNotBetween($field, $value);
+                $builder->whereNotBetween($field, $value, Str::lower($coordinator));
                 break;
             case 'DATE':
-                $builder->whereDate($field, '=', $value);
+                $builder->whereDate($field, '=', $value, Str::lower($coordinator));
                 break;
             case 'DATEBEFORE':
-                $builder->whereDate($field, '<', $value);
+                $builder->whereDate($field, '<', $value, Str::lower($coordinator));
                 break;
             case 'DATEAFTER':
-                $builder->whereDate($field, '>', $value);
+                $builder->whereDate($field, '>', $value, Str::lower($coordinator));
                 break;
             case 'DATEBEFOREQ':
-                $builder->whereDate($field, '<=', $value);
+                $builder->whereDate($field, '<=', $value, Str::lower($coordinator));
                 break;
             case 'DATEAFTEREQ':
-                $builder->whereDate($field, '>=', $value);
+                $builder->whereDate($field, '>=', $value, Str::lower($coordinator));
                 break;
             case 'DATENOT':
-                $builder->whereDate($field, '!=', $value);
+                $builder->whereDate($field, '!=', $value, Str::lower($coordinator));
                 break;
             case 'DATEBETWEEN':
                 $value = $this->getDateArrayValue($value);
-                $builder->whereBetween($field, $value);
+                $builder->whereBetween($field, $value, Str::lower($coordinator));
                 break;
             case 'DATENOTBETWEEN':
                 $value = $this->getDateArrayValue($value);
-                $builder->whereNotBetween($field, $value);
+                $builder->whereNotBetween($field, $value, Str::lower($coordinator));
                 break;
             default:
-                $builder->where($field, $operator, $value);
+                $builder->where($field, $operator, $value, Str::lower($coordinator));
+        }
+    }
+
+    /**
+     * @param $input
+     * @param $builder
+     * @return void
+     */
+    protected function bindFieldFilter($input, $builder = null)
+    {
+        if ($builder == null) {
+            //In case of relation sub-query, don't use the global builder
+            $builder = $this->builder;
+        }
+        $field = $input['field'] ?? null;
+        $operator = $input['operator'] ?? '=';
+        $value = $input['value'] ?? null;
+        $coordinator = (isset($input['coordinator'])
+            && in_array(Str::lower($input['coordinator']), ['and', 'or']))
+            ? $input['coordinator']
+            : 'and';
+
+        if ($field != null) {
+            if (str_contains($field, '.')) {
+                $parts = explode('.', $field);
+                $last = array_pop($parts);
+                $relations = implode('.', $parts);
+                $builder->whereHas($relations, function (Builder $builder) use ($last, $operator, $value, $coordinator) {
+                    $this->bindQuery($last, $operator, $value, $coordinator, $builder);
+                });
+            } else {
+                $this->bindQuery($field, $operator, $value, $coordinator, $builder);
+            }
         }
     }
 
