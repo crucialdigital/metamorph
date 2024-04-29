@@ -131,7 +131,7 @@ class ResourceQueryLoader
             }
 
             $grouped_filters = collect($filters)->where(function ($filter) {
-                return isset($filter['group']) && $filter['group'] != null && $filter['group'] == '';
+                return isset($filter['group']) && $filter['group'] != null && $filter['group'] != '';
             })->groupBy('group');
             foreach ($grouped_filters as $group => $group_filters) {
                 $groupCoordinator = explode('_', $group)[0];

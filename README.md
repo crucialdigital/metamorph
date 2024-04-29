@@ -246,7 +246,7 @@ Available endpoint are :
 
 >NOTE  
 >`field` : value of filters can be nested relation field ``i.e: comments.user._id``  
-> `cordinator` : one of `and`, `or` to indicate using where(...) / orWhere(...)  
+> `coordinator` : one of `and`, `or` to indicate using where(...) / orWhere(...)  
 > `group` : is used to group filter criteria into sub-query; the value must start with one of `and_` `or_`  
 
 ## Advanced
