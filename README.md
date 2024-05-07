@@ -6,7 +6,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/crucialdigital/metamorph.svg?style=flat-square)](https://packagist.org/packages/crucialdigital/metamorph)
 
 Metamorph is a Laravel package that implements a data model system based on mongodb.
-This package provides a powerful system for managing dynamically models for api development.  
+This package provides a powerful system for managing dynamically models for API development.  
 
 Before going any further, consider that this package is intended for API development with Laravel and Mongodb
 ## Table of contents

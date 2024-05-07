@@ -44,7 +44,11 @@ class ResourceQueryLoader
 
         $this->builder = $this->builder->select($select);
 
-        $this->builder = $this->builder->orderBy($order_by, $order_direction);
+        foreach (explode('|', $order_by) as $k => $str){
+            $directions = explode('|', $order_direction);
+            $direction = $directions[$k] ?? $directions[0];
+            $this->builder = $this->builder->orderBy($str, $direction);
+        }
 
         if ($only_trash) {
             $this->builder = $this->builder->onlyTrashed();
