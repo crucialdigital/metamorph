@@ -87,6 +87,7 @@ class SearchController extends Controller
             $writerType = match (mb_strtoupper($format)) {
                 'XLSX' => Excel::XLSX,
                 'XLS' => Excel::XLS,
+                'PDF' => Excel::DOMPDF,
                 default => Excel::CSV,
             };
             return (new DataModelsExport($data, $form))
