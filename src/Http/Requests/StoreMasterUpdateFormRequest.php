@@ -95,7 +95,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
                 })->toArray());
                 $rules [] = 'in:' . $list;
             }
-            if (isset($input['rules']) && isset($input['rules']['update'])) {
+            if (isset($input['rules']['update'])) {
                 $r = explode('|', $input['rules']['update']);
                 foreach ($r as $str) {
                     if (!in_array($str, $rules)) {

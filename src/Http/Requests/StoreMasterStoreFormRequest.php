@@ -5,7 +5,6 @@ namespace CrucialDigital\Metamorph\Http\Requests;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\Rules\GeoPointRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class StoreMasterStoreFormRequest extends FormRequest
@@ -38,7 +37,7 @@ class StoreMasterStoreFormRequest extends FormRequest
         }
         $inputs = [];
 
-        if ($form && $form->getAttribute('inputs')) {
+        if ($form->getAttribute('inputs')) {
             $inputs = $form->getAttribute('inputs');
         } else {
             abort(422, 'No field found !');
@@ -51,6 +50,7 @@ class StoreMasterStoreFormRequest extends FormRequest
             'text' => ['string'],
             'longtext' => ['string'],
             'select' => [],
+            'radio' => [],
             'multiselect' => ['array'],
             'resource' => ['string'],
             'number' => ['numeric'],
@@ -68,13 +68,13 @@ class StoreMasterStoreFormRequest extends FormRequest
 
         foreach ($inputs as $input) {
             $rules = [];
-            $rules[] = (isset($input['required']) && $input['required'] == true) ? 'required' : 'nullable';
+            $rules[] = (isset($input['required']) && $input['required']) ? 'required' : 'nullable';
 
             if (isset($input['type']) && isset($type_match[$input['type']])) {
                 $rules = [...$rules, ...$type_match[$input['type']]];
             }
 
-            if (isset($input['unique']) && $input['unique'] == true) {
+            if (isset($input['unique']) && $input['unique']) {
                 if ($class_name = config('metamorph.models.' . $this->input('entity'))) {
                     $rules[] = 'unique:' . $class_name . ',' . $input['field'];
                 }
@@ -102,7 +102,7 @@ class StoreMasterStoreFormRequest extends FormRequest
                 })->toArray());
                 $rules [] = 'in:' . $list;
             }
-            if (isset($input['rules']) && isset($input['rules']['store'])) {
+            if (isset($input['rules']['store'])) {
                 $r = explode('|', $input['rules']['store']);
                 foreach ($r as $str) {
                     if (!in_array($str, $rules)) {

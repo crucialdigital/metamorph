@@ -84,7 +84,7 @@ class ResourceQueryLoader
      * @param mixed $search
      * @return void
      */
-    private function search(mixed $search)
+    private function search(mixed $search): void
     {
         $queries = (!is_array($search)) ? json_decode($search, true) : $search;
         $term = request()->query('term');
@@ -121,7 +121,7 @@ class ResourceQueryLoader
      * @param $queries
      * @return void
      */
-    private function filter($queries)
+    private function filter($queries): void
     {
         $filters = (is_string($queries)) ? json_decode($queries, false) : $queries;
 
@@ -198,7 +198,7 @@ class ResourceQueryLoader
      * @param Builder|null $builder
      * @return void
      */
-    protected function bindQuery($field, $operator, $value, string $coordinator = 'and', Builder $builder = null)
+    protected function bindQuery($field, $operator, $value, string $coordinator = 'and', Builder $builder = null): void
     {
         if ($builder == null) {
             //In case of relation sub-query, don't use the global builder

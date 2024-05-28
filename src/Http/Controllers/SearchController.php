@@ -63,12 +63,13 @@ class SearchController extends Controller
     }
 
     /**
+     * @param Request $request
      * @param $entity
      * @param $form
      * @return Response|BinaryFileResponse|JsonResponse
      */
 
-    public function export($entity, $form): Response|BinaryFileResponse|JsonResponse
+    public function export(Request $request, $entity, $form): Response|BinaryFileResponse|JsonResponse
     {
 
         $policies = collect(Config::policies($entity))->map(fn($police)=> Str::lower($police))->toArray();
@@ -82,8 +83,14 @@ class SearchController extends Controller
 
         if ($builder != null) {
             $data = (new ResourceQueryLoader($builder))->load();
+            $format = $request->input('format', 'CSV');
+            $writerType = match (mb_strtoupper($format)) {
+                'XLSX' => Excel::XLSX,
+                'XLS' => Excel::XLS,
+                default => Excel::CSV,
+            };
             return (new DataModelsExport($data, $form))
-                ->download($entity . '.csv', Excel::CSV);
+                ->download($entity . "." . mb_strtolower($format), $writerType);
         } else {
             return response()->json(null, 404);
         }
