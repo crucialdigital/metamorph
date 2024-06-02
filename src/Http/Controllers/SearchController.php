@@ -7,7 +7,6 @@ use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -45,7 +44,7 @@ class SearchController extends Controller
     public function search(Request $request, $entity): JsonResponse
     {
 
-        $policies = collect(Config::policies($entity))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('viewany', $policies)) {
             Log::debug(Auth::user());
@@ -72,7 +71,7 @@ class SearchController extends Controller
     public function export(Request $request, $entity, $form): Response|BinaryFileResponse|JsonResponse
     {
 
-        $policies = collect(Config::policies($entity))->map(fn($police)=> Str::lower($police))->toArray();
+        $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('viewany', $policies)) {
             Gate::authorize("viewAny", config("metamorph.models.$entity"));
@@ -88,6 +87,7 @@ class SearchController extends Controller
                 'XLSX' => Excel::XLSX,
                 'XLS' => Excel::XLS,
                 'PDF' => Excel::DOMPDF,
+                'ODS' => Excel::ODS,
                 default => Excel::CSV,
             };
             return (new DataModelsExport($data, $form))

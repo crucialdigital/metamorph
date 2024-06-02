@@ -47,10 +47,11 @@ class MetamorphFormResourcesController extends Controller
 
     private function load($builder, array $search = []): Collection|LengthAwarePaginator|array
     {
-        if (request()->has('term') && request()->input('term') != null) {
+        $term = request()->input('term');
+        if (isset($term)) {
             $query = [];
             foreach ($search as $item) {
-                $query[$item] = request()->input('term');
+                $query[$item] = $term;
             }
             request()->merge(['search' => $query]);
         }

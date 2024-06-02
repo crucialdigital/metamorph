@@ -86,7 +86,7 @@ class ResourceQueryLoader
      */
     private function search(mixed $search): void
     {
-        $queries = (!is_array($search)) ? json_decode($search, true) : $search;
+        $queries = (!is_array($search)) ? (json_decode($search, true) ?? []) : $search;
         $term = request()->query('term');
         if (isset($term)) {
             $columns = $this->builder->getModel()::class::search() ?? [];
@@ -95,20 +95,28 @@ class ResourceQueryLoader
             }
         }
         if ($queries != null && count($queries) > 0) {
-            $this->builder->where(function ($builder) use ($queries) {
+            $this->builder->where(function (Builder $builder) use ($queries) {
                 $i = 0;
                 foreach ($queries as $k => $query) {
                     if ($i == 0) {
                         if ($k != '_id') {
                             $builder->where($k, 'LIKE', '%' . $query . '%');
                         } else {
-                            $builder->where($k, $query);
+                            if(Str::contains($k, '.')){
+                                $builder->whereHas($k, $query);
+                            }else{
+                                $builder->where($k, $query);
+                            }
                         }
                     } else {
                         if ($k != '_id') {
                             $builder->orWhere($k, 'LIKE', '%' . $query . '%');
                         } else {
-                            $builder->orWhere($k, $query);
+                            if(Str::contains($k, '.')){
+                                $builder->orWhereHas($k, $query);
+                            }else{
+                                $builder->orWhere($k, $query);
+                            }
                         }
                     }
                     $i++;
@@ -260,7 +268,7 @@ class ResourceQueryLoader
      * @param $builder
      * @return void
      */
-    protected function bindFieldFilter($input, $builder = null)
+    protected function bindFieldFilter($input, $builder = null): void
     {
         if ($builder == null) {
             //In case of relation sub-query, don't use the global builder
