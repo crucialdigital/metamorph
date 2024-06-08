@@ -5,17 +5,20 @@ namespace CrucialDigital\Metamorph;
 
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use MongoDB\Laravel\Eloquent\Builder;
 use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\EmbedsMany;
+use MongoDB\Laravel\Relations\EmbedsOne;
 
 class ResourceQueryLoader
 {
-    protected Builder|\MongoDB\Laravel\Eloquent\Builder|Model|null $builder;
+    protected Builder|Model|null $builder;
 
-    public function __construct(?Builder $builder)
+    public function __construct(Builder|Model|null $builder)
     {
         $this->builder = $builder;
     }
@@ -44,7 +47,7 @@ class ResourceQueryLoader
 
         $this->builder = $this->builder->select($select);
 
-        foreach (explode('|', $order_by) as $k => $str){
+        foreach (explode('|', $order_by) as $k => $str) {
             $directions = explode('|', $order_direction);
             $direction = $directions[$k] ?? $directions[0];
             $this->builder = $this->builder->orderBy($str, $direction);
@@ -102,9 +105,9 @@ class ResourceQueryLoader
                         if ($k != '_id') {
                             $builder->where($k, 'LIKE', '%' . $query . '%');
                         } else {
-                            if(Str::contains($k, '.')){
+                            if (Str::contains($k, '.')) {
                                 $builder->whereHas($k, $query);
-                            }else{
+                            } else {
                                 $builder->where($k, $query);
                             }
                         }
@@ -112,9 +115,9 @@ class ResourceQueryLoader
                         if ($k != '_id') {
                             $builder->orWhere($k, 'LIKE', '%' . $query . '%');
                         } else {
-                            if(Str::contains($k, '.')){
+                            if (Str::contains($k, '.')) {
                                 $builder->orWhereHas($k, $query);
-                            }else{
+                            } else {
                                 $builder->orWhere($k, $query);
                             }
                         }
@@ -287,13 +290,31 @@ class ResourceQueryLoader
                 $parts = explode('.', $field);
                 $last = array_pop($parts);
                 $relations = implode('.', $parts);
-                $builder->whereHas($relations, function (Builder $builder) use ($last, $operator, $value, $coordinator) {
-                    $this->bindQuery($last, $operator, $value, $coordinator, $builder);
-                });
+                $first = array_shift($parts);
+                $relationClass = $this->relationExists($first, $builder);
+
+                if ($relationClass) {
+                    if ($relationClass instanceof EmbedsOne || $relationClass instanceof EmbedsMany) {
+                        $this->bindQuery($relations . '.' . $last, $operator, $value, $coordinator, $builder);
+                    } else {
+                        $builder->whereHas($relations, function (Builder $builder) use ($last, $operator, $value, $coordinator) {
+                            $this->bindQuery($last, $operator, $value, $coordinator, $builder);
+                        });
+                    }
+                }
+
             } else {
                 $this->bindQuery($field, $operator, $value, $coordinator, $builder);
             }
         }
     }
 
+    private function relationExists(string $relation, Builder $builder): bool|Relation
+    {
+        try {
+            return $builder->getRelation($relation);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }
