@@ -103,7 +103,8 @@ class StoreMasterStoreFormRequest extends FormRequest
                 $rules [] = 'in:' . $list;
             }
             if (isset($input['rules']['store'])) {
-                $r = explode('|', $input['rules']['store']);
+                $store_rules = $input['rules']['store'];
+                $r = is_array($store_rules) ? $store_rules : explode('|', $store_rules);
                 foreach ($r as $str) {
                     if (!in_array($str, $rules)) {
                         $rules[] = $str;
@@ -119,8 +120,8 @@ class StoreMasterStoreFormRequest extends FormRequest
     {
         $attributes = [];
         $inputs = MetamorphForm::where('_id', $this->input('form_id'))
-                ->orWhere('entity', $this->input('entity'))->first()
-                ?->getAttribute('inputs') ?? [];
+            ->orWhere('entity', $this->input('entity'))->first()
+            ?->getAttribute('inputs') ?? [];
         foreach ($inputs as $input) {
             $attributes[$input['field']] = Str::lower($input['name']);
         }
