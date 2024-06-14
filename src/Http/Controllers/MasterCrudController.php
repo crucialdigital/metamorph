@@ -11,7 +11,6 @@ use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
@@ -27,14 +26,12 @@ class MasterCrudController extends Controller implements HasMiddleware
         $middlewares = [];
         $model = request()->route('entity');
         $middlewares_config = Config::modelMiddleware($model);
-        if (isset($middlewares_config[$model])) {
-            foreach ($middlewares_config[$model] as $middleware => $only) {
+        if (isset($middlewares_config)) {
+            foreach ($middlewares_config as $middleware => $only) {
                 if (is_string($only) && $only == '*') {
                     $middlewares[] = new Middleware($middleware);
                 } else {
-                    if (is_array($only)) {
-                        $middlewares[] = new Middleware($middleware, only:  $only);
-                    }
+                    $middlewares[] = new Middleware($middleware, only: $only);
                 }
             }
         }
@@ -113,7 +110,7 @@ class MasterCrudController extends Controller implements HasMiddleware
                         $value = join(', ', collect($res)->map(function ($entry) use ($el) {
                             return $entry->getAttribute(Config::models($el['entity'])::label());
                         })->values()->toArray());
-                    }else{
+                    } else {
                         $value = $res ? $res->getAttribute(Config::models($el['entity'])::label()) : '';
                     }
                     return [
