@@ -11,30 +11,33 @@ use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use MongoDB\Laravel\Eloquent\Builder;
 
-class MasterCrudController extends Controller
+class MasterCrudController extends Controller implements HasMiddleware
 {
 
-    public function __construct()
+    public static function middleware(): array
     {
+        $middlewares = [];
         $model = request()->route('entity');
-        $middlewares = Config::modelMiddleware($model);
-        if (isset($middlewares[$model])) {
-            foreach ($middlewares[$model] as $middleware => $only) {
+        $middlewares_config = Config::modelMiddleware($model);
+        if (isset($middlewares_config[$model])) {
+            foreach ($middlewares_config[$model] as $middleware => $only) {
                 if (is_string($only) && $only == '*') {
-                    if (class_exists($middleware)) {
-                        $this->middleware($middleware);
-                    }
+                    $middlewares[] = new Middleware($middleware);
                 } else {
-                    if (class_exists($middleware) && is_array($only)) {
-                        $this->middleware($middleware, ['only' => $only]);
+                    if (is_array($only)) {
+                        $middlewares[] = new Middleware($middleware, only:  $only);
                     }
                 }
             }
         }
+        return $middlewares;
     }
 
     /**
