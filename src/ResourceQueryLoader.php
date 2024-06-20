@@ -43,9 +43,9 @@ class ResourceQueryLoader
         if ($filters) {
             $this->filter($filters);
         }
-        $select = request()->input('columns', ['*']);
+        $columns = request()->input('columns', $columns);
 
-        $this->builder = $this->builder->select($select);
+        $this->builder = $this->builder->select($columns);
 
         foreach (explode('|', $order_by) as $k => $str) {
             $directions = explode('|', $order_direction);
