@@ -14,7 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use MongoDB\Laravel\Eloquent\Builder;
 
@@ -35,7 +34,6 @@ class MasterCrudController extends Controller implements HasMiddleware
                 }
             }
         }
-        Log::debug($middlewares);
         return $middlewares;
     }
 
