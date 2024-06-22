@@ -33,7 +33,7 @@ class StoreMasterStoreFormRequest extends FormRequest
         $form = MetamorphForm::where('_id', $this->input('form_id'))
             ->orWhere('entity', $this->input('entity'))->first();
         if (!$form) {
-            abort(404);
+            abort(404, 'Data model not found !');
         }
         $inputs = [];
 
