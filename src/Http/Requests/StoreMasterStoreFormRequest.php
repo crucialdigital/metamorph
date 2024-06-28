@@ -48,7 +48,9 @@ class StoreMasterStoreFormRequest extends FormRequest
 
         $type_match = [
             'text' => ['string'],
+            'address' => ['string'],
             'longtext' => ['string'],
+            'richtext' => ['string'],
             'select' => [],
             'radio' => [],
             'multiselect' => ['array'],
@@ -70,9 +72,11 @@ class StoreMasterStoreFormRequest extends FormRequest
             $rules = [];
             $rules[] = (isset($input['required']) && $input['required']) ? 'required' : 'nullable';
 
+            $type = 'string';
             if (isset($input['type']) && isset($type_match[$input['type']])) {
-                $rules = [...$rules, ...$type_match[$input['type']]];
+                $type = $type_match[$input['type']];
             }
+            $rules = [...$rules, ...$type];
 
             if (isset($input['unique']) && $input['unique']) {
                 if ($class_name = config('metamorph.models.' . $this->input('entity'))) {

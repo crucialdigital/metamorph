@@ -2,6 +2,8 @@
 
 namespace CrucialDigital\Metamorph;
 
+use MongoDB\Laravel\Eloquent\Model;
+
 class Config
 {
     /**
@@ -43,7 +45,7 @@ class Config
 
     /**
      * @param $model
-     * @return mixed
+     * @return mixed|string|Model
      */
     public static function models($model): mixed
     {

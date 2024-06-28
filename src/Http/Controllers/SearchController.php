@@ -11,9 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -47,7 +45,6 @@ class SearchController extends Controller
         $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('viewany', $policies)) {
-            Log::debug(Auth::user());
             Gate::authorize("viewAny", config("metamorph.models.$entity"));
         }
 
@@ -149,7 +146,7 @@ class SearchController extends Controller
         }
 
         if (!class_exists($model)) {
-            abort(404, "Model not found ! v");
+            abort(404, "Model not found !");
         }
 
         return $model::where('_id', 'exists', true);

@@ -18,7 +18,7 @@ class ResourceQueryLoader
 {
     protected Builder|Model|null $builder;
 
-    public function __construct(Builder|Model|null $builder)
+    public function __construct(Builder|\Illuminate\Database\Eloquent\Builder|Model|null $builder)
     {
         $this->builder = $builder;
     }

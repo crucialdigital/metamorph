@@ -5,7 +5,6 @@ namespace CrucialDigital\Metamorph\Http\Requests;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\Rules\GeoPointRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class StoreMasterUpdateFormRequest extends FormRequest
@@ -38,7 +37,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
         }
         $inputs = [];
 
-        if ($form && $form->getAttribute('inputs')) {
+        if ($form->getAttribute('inputs')) {
             $inputs = $form->getAttribute('inputs');
         } else {
             abort(422, 'No field found !');
@@ -67,7 +66,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
 
         foreach ($inputs as $input) {
             $rules = [];
-            $rules[] = (isset($input['required']) && $input['required'] == true) ? 'filled' : 'nullable';
+            $rules[] = (isset($input['required']) && $input['required']) ? 'filled' : 'nullable';
 
             if (isset($input['type']) && isset($type_match[$input['type']])) {
                 $rules = [...$rules, ...$type_match[$input['type']]];
