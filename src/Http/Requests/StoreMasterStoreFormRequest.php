@@ -72,7 +72,7 @@ class StoreMasterStoreFormRequest extends FormRequest
             $rules = [];
             $rules[] = (isset($input['required']) && $input['required']) ? 'required' : 'nullable';
 
-            $type = 'string';
+            $type = ['string'];
             if (isset($input['type']) && isset($type_match[$input['type']])) {
                 $type = $type_match[$input['type']];
             }
