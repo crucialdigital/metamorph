@@ -75,6 +75,9 @@ class ResourceQueryLoader
             $data = $this->builder->raw(function ($collection) use ($per_page, $filters) {
                 $match = [];
                 foreach ($filters as $filter) {
+                    if(!isset($filter['operator'])){
+                        $filter['operator'] = '=';
+                    }
                     if(isset($filter['field'])){
                         $operator = isset(self::OPERATOR[$filter['operator']]) ? Str::lower(self::OPERATOR[$filter['operator']]) : '$eq';
                         $match[$filter['field']] = [
