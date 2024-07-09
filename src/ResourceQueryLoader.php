@@ -18,6 +18,16 @@ class ResourceQueryLoader
 {
     protected Builder|Model|null $builder;
 
+    const OPERATOR = [
+        '=' => '$eq',
+        '>' => '$gt',
+        '>=' => '$gte',
+        '<' => '$lt',
+        '<=' => '$lte',
+        '!=' => '$ne',
+        'in' => '$in',
+    ];
+
     public function __construct(Builder|\Illuminate\Database\Eloquent\Builder|Model|null $builder)
     {
         $this->builder = $builder;
@@ -62,9 +72,20 @@ class ResourceQueryLoader
         }
 
         if ($randomize) {
-            $data = $this->builder->raw(function ($collection) use ($per_page) {
+            $data = $this->builder->raw(function ($collection) use ($per_page, $filters) {
+                $match = [];
+                foreach ($filters as $filter) {
+                    if(isset($filter['field'])){
+                        $operator = isset(self::OPERATOR[$filter['operator']]) ? Str::lower(self::OPERATOR[$filter['operator']]) : '$eq';
+                        $match[$filter['field']] = [
+                            $operator => $filter['value']
+                        ];
+                    }
+                }
+
                 return $collection->aggregate([
                     [
+                        '$match' => $match,
                         '$sample' => [
                             'size' => $per_page
                         ]
