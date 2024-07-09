@@ -8,6 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use MongoDB\Laravel\Eloquent\Builder;
 use MongoDB\Laravel\Eloquent\Model;
@@ -73,14 +74,14 @@ class ResourceQueryLoader
 
         if ($randomize) {
             $data = $this->builder->raw(function ($collection) use ($per_page, $filters) {
-                $match = [];
+                $conditions = [];
                 foreach ($filters as $filter) {
                     if(!isset($filter['operator'])){
                         $filter['operator'] = '=';
                     }
                     if(isset($filter['field'])){
                         $operator = isset(self::OPERATOR[$filter['operator']]) ? Str::lower(self::OPERATOR[$filter['operator']]) : '$eq';
-                        $match[$filter['field']] = [
+                        $conditions[$filter['field']] = [
                             $operator => $filter['value']
                         ];
                     }
@@ -88,7 +89,9 @@ class ResourceQueryLoader
 
                 return $collection->aggregate([
                     [
-                        '$match' => $match,
+                        '$match' => $conditions,
+                    ],
+                    [
                         '$sample' => [
                             'size' => $per_page
                         ]
