@@ -76,10 +76,10 @@ class ResourceQueryLoader
             $data = $this->builder->raw(function ($collection) use ($per_page, $filters) {
                 $conditions = [];
                 foreach ($filters as $filter) {
-                    if(!isset($filter['operator'])){
+                    if (!isset($filter['operator'])) {
                         $filter['operator'] = '=';
                     }
-                    if(isset($filter['field'])){
+                    if (isset($filter['field'])) {
                         $operator = isset(self::OPERATOR[$filter['operator']]) ? Str::lower(self::OPERATOR[$filter['operator']]) : '$eq';
                         $conditions[$filter['field']] = [
                             $operator => $filter['value']
@@ -87,16 +87,22 @@ class ResourceQueryLoader
                     }
                 }
 
-                return $collection->aggregate([
-                    [
-                        '$match' => $conditions,
-                    ],
+                $aggregate = [
                     [
                         '$sample' => [
                             'size' => $per_page
                         ]
-                    ],
-                ]);
+                    ]
+                ];
+
+                if (count($conditions) > 0) {
+                    $aggregate[] =
+                        [
+                            '$match' => $conditions,
+                        ];
+                }
+
+                return $collection->aggregate($aggregate);
             });
             if ($with != null) $data = $data->load($with);
             return $data;
