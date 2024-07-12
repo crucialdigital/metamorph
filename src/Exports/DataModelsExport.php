@@ -3,35 +3,36 @@
 namespace CrucialDigital\Metamorph\Exports;
 
 use CrucialDigital\Metamorph\Config;
-use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use MongoDB\Laravel\Query\Builder;
 
-class DataModelsExport implements FromCollection, WithHeadings
+class DataModelsExport implements FromCollection, WithHeadings, WithChunkReading
 {
-
     use Exportable;
-
     private Collection $collection;
-    private MetamorphForm $form;
 
-    public function __construct(Collection $collection, $form)
+
+
+    public function __construct(Collection $collection, protected MetamorphForm $form)
     {
-        $this->form = $form;
-        $this->collection = $collection->map(function ($data) use ($form) {
+        $this->collection = collect();
+        $ressources = $this->resources($collection);
+        foreach ($collection as $data) {
             $prepared = [];
-            $form->inputs->each(function ($input) use (&$prepared, $data) {
+            foreach ($this->form->inputs as $input) {
                 if (isset($input['type']) && in_array($input['type'], ['resource', 'multiresource', 'selectresource'])) {
-                    $model = $this->_makeBuilder($input['entity'])->firstWhere('_id', '=', $data[$input['field']]);
+                    $model = ($ressources[$input['entity']] ?? collect())->where('_id', '=', $data[$input['field']])->first();
                     if ($model == null) {
                         $prepared[$input['field']] = '';
                     } else {
-                        $label = $model->getModel()::label() ?? 'name';
+                        $label = (Config::models($input['entity']))::label() ?? 'name';
                         $prepared[$input['field']] = $model[$label];
                     }
 
@@ -41,21 +42,33 @@ class DataModelsExport implements FromCollection, WithHeadings
                         'datetime' => (new Carbon($data[$input['field']]))->format('d-m-Y H:i'),
                         'boolean' => $data[$input['field']] ? 'Oui' : 'Non',
                         'select' => collect($input['options'])
-                                ->firstWhere('value', '=', $data[$input['field']])['label']
+                            ->firstWhere('value', '=', $data[$input['field']])['label']
                             ?? $data[$input['field']],
                         default => $data[$input['field']],
                     };
                 }
-            });
-            $class = $this->_makeBuilder($form->entity)?->getModel();
+            }
+
+            $class = Config::models($form->entity);
             if ($class && $class::exportsFields()) {
                 foreach ($class::exportsFields() as $key => $column) {
                     $prepared[$key] = $this->getValue($key, $data);
                 }
             }
-            return $prepared;
-        });
+            $this->collection->push($prepared);
+        }
+    }
 
+    private function resources(Collection $collection): array
+    {
+        $data = [];
+        foreach ($this->form->inputs as $input) {
+            if (isset($input['type']) && in_array($input['type'], ['resource', 'multiresource', 'selectresource'])) {
+                $data[$input['entity']] = $this->_makeBuilder($input['entity'])->whereIn('_id', $collection->pluck($input['field'])->flatten()->unique()->values()->toArray())->get();
+            }
+        }
+
+        return $data;
     }
 
     public function collection(): Collection
@@ -68,7 +81,7 @@ class DataModelsExport implements FromCollection, WithHeadings
         $headers = $this->form->inputs->map(function ($input) {
             return $input['name'];
         })->toArray();
-        $class = $this->_makeBuilder($this->form->entity)?->getModel();
+        $class = Config::models($this->form->entity);
         if ($class && $class::exportsFields()) {
             foreach ($class::exportsFields() as $column) {
                 $headers[] = $column;
@@ -77,23 +90,9 @@ class DataModelsExport implements FromCollection, WithHeadings
         return $headers;
     }
 
-    private function _makeBuilder($entity): ?Builder
+    private function _makeBuilder($entity): ? Builder
     {
-        $model = Config::models($entity);
-        $repository = Config::repositories($entity);
-
-        if ($repository && class_exists($repository)) {
-            if (!(new $repository instanceof DataRepositoryBuilder)) {
-                return null;
-            }
-            return (new $repository)->builder();
-        }
-
-        if (!class_exists($model)) {
-            return null;
-        }
-
-        return $model::query();
+        return DB::collection(app(Config::models($entity))->getTable());
     }
 
     private function getValue($key, $data)
@@ -104,5 +103,10 @@ class DataModelsExport implements FromCollection, WithHeadings
             $value = (isset($data) && isset($value[$k])) ? $value[$k] : null;
         }
         return $value;
+    }
+
+    public function chunkSize(): int
+    {
+        return 50;
     }
 }

@@ -68,6 +68,7 @@ class SearchController extends Controller
     public function export(Request $request, $entity, $form): Response|BinaryFileResponse|JsonResponse
     {
 
+        set_time_limit(0);
         $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('viewany', $policies)) {
@@ -135,21 +136,21 @@ class SearchController extends Controller
      */
     private function _makeBuilder($entity): ?Builder
     {
-        $model = config('metamorph.models.' . $entity);
-        $repository = config('metamorph.repositories.' . $entity);
+        $model = Config::models($entity);
+        $repository = Config::repositories($entity);
 
         if ($repository && class_exists($repository)) {
             if (!(new $repository instanceof DataRepositoryBuilder)) {
                 abort(500, "The data repository must implement CrucialDigital\Metamorph\DataRepositoryBuilder class");
             }
-            return (new $repository)->builder();
+            return app($repository)->builder();
         }
 
         if (!class_exists($model)) {
             abort(404, "Model not found !");
         }
 
-        return $model::where('_id', 'exists', true);
+        return app($model)->where('_id', 'exists', true);
     }
 
 

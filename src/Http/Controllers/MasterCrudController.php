@@ -55,7 +55,7 @@ class MasterCrudController extends Controller implements HasMiddleware
 
         $formData = Metamorph::mapFormRequestData($request->all());
 
-        $entity = config('metamorph.models.' . $model)::create($formData);
+        $entity = app(config('metamorph.models.' . $model))->create($formData);
 
         if ($entity && $entity->_id) {
             $entity->fill(Metamorph::mapFormRequestFiles(
@@ -81,7 +81,7 @@ class MasterCrudController extends Controller implements HasMiddleware
         /**
          * @var Builder $data
          */
-        $data = Config::models($model)::where('_id', '=', $id);
+        $data = app(Config::models($model))->where('_id', '=', $id);
         $with = ResourceQueryLoader::makeRelations($data);
         if ($with != null) $data = $data->with($with);
         $data = $data->firstOrFail();
@@ -100,7 +100,7 @@ class MasterCrudController extends Controller implements HasMiddleware
                     return in_array($input['type'], ['resource', 'multiresource', 'selectresource']);
                 })->map(function ($el) use ($data) {
                     try {
-                        $res = Config::models($el['entity'])::find($data[$el['field']]);
+                        $res = app(Config::models($el['entity']))->find($data[$el['field']]);
                     } catch (Exception $e) {
                         $res = null;
                     }
@@ -132,7 +132,7 @@ class MasterCrudController extends Controller implements HasMiddleware
      */
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
-        $entity = Config::models($model)::findOrFail($id);
+        $entity = app(Config::models($model))->findOrFail($id);
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('update', $policies)) {
@@ -157,7 +157,7 @@ class MasterCrudController extends Controller implements HasMiddleware
     public function destroy(string $model, string $id): JsonResponse
     {
 
-        $data = Config::models($model)::findOrFail($id);
+        $data = app(Config::models($model))->findOrFail($id);
 
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
