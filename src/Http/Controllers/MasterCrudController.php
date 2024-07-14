@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use MongoDB\Laravel\Eloquent\Builder;
@@ -78,48 +79,48 @@ class MasterCrudController extends Controller implements HasMiddleware
      */
     public function show(string $model, string $id): JsonResponse
     {
-        /**
-         * @var Builder $data
-         */
-        $data = app(Config::models($model))->where('_id', '=', $id);
-        $with = ResourceQueryLoader::makeRelations($data);
-        if ($with != null) $data = $data->with($with);
-        $data = $data->firstOrFail();
+        $json = cache()->remember("${model}_$id", now()->addMinutes(10), function () use ($model, $id) {
+            $data = app(Config::models($model))->where('_id', '=', $id);
+            $with = ResourceQueryLoader::makeRelations($data);
+            if ($with != null) $data = $data->with($with);
+            $data = $data->firstOrFail();
 
-        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
+            $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
-        if (in_array('view', $policies)) {
-            Gate::authorize("view", $data);
-        }
+            if (in_array('view', $policies)) {
+                Gate::authorize("view", $data);
+            }
 
-        $form = MetamorphForm::where('entity', $model)->latest()->first();
-        $inputs = $form?->getAttribute('inputs');
-        if ($inputs) {
-            $metas = collect($inputs)
-                ->filter(function ($input) {
-                    return in_array($input['type'], ['resource', 'multiresource', 'selectresource']);
-                })->map(function ($el) use ($data) {
-                    try {
-                        $res = app(Config::models($el['entity']))->find($data[$el['field']]);
-                    } catch (Exception $e) {
-                        $res = null;
-                    }
-                    if ($res instanceof Countable) {
-                        $value = join(', ', collect($res)->map(function ($entry) use ($el) {
-                            return $entry->getAttribute(Config::models($el['entity'])::label());
-                        })->values()->toArray());
-                    } else {
-                        $value = $res ? $res->getAttribute(Config::models($el['entity'])::label()) : '';
-                    }
-                    return [
-                        'label' => $el['field'],
-                        'value' => $value
-                    ];
-                });
+            $form = MetamorphForm::where('entity', $model)->latest()->first();
+            $inputs = $form?->getAttribute('inputs');
+            if ($inputs) {
+                $metas = collect($inputs)
+                    ->filter(function ($input) {
+                        return in_array($input['type'], ['resource', 'multiresource', 'selectresource']);
+                    })->map(function ($el) use ($data) {
+                        try {
+                            $res = app(Config::models($el['entity']))->find($data[$el['field']]);
+                        } catch (Exception $e) {
+                            $res = null;
+                        }
+                        if ($res instanceof Countable) {
+                            $value = join(', ', collect($res)->map(function ($entry) use ($el) {
+                                return $entry->getAttribute(Config::models($el['entity'])::label());
+                            })->values()->toArray());
+                        } else {
+                            $value = $res ? $res->getAttribute(Config::models($el['entity'])::label()) : '';
+                        }
+                        return [
+                            'label' => $el['field'],
+                            'value' => $value
+                        ];
+                    });
 
-            $data['meta_data'] = array_values($metas->toArray());
-        }
-        return response()->json($data);
+                $data['meta_data'] = array_values($metas->toArray());
+            }
+            return $data;
+        });
+        return response()->json($json);
     }
 
     /**
