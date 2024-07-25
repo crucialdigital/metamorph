@@ -29,7 +29,7 @@ class StoreMetamorphFormInputRequest extends FormRequest
             'name' => ['required', 'string'],
             'width' => ['nullable', 'number', 'min:1', 'max:24'],
             'label' => ['nullable', 'string', 'min:2'],
-            'type' => ['required', 'string', 'in:text,longtext,richtext,textarea,select,multiselect,multiresource,selectresource,resource,number,tel,email,date,photo,file,geopoint,polygon,radio,address'],
+            'type' => ['required', 'string', 'in:text,longtext,richtext,textarea,select,multiselect,multiresource,selectresource,resource,number,tel,email,date,photo,file,geopoint,polygon,radio,address,checkbox'],
             'required' => ['nullable', 'boolean'],
             'options' => ['required_if:type,select,multiselect,polygon', 'nullable', 'array'],
             'entity' => ['required_if:type,resource,multiresource,selectresource'],
