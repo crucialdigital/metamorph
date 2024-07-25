@@ -21,7 +21,7 @@ class StoreMetamorphFormInputRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'field' => ['required', 'string'],

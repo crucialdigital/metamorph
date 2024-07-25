@@ -3,6 +3,7 @@
 namespace CrucialDigital\Metamorph\Models;
 
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
@@ -17,6 +18,8 @@ class MetamorphForm extends BaseModel
     protected $guarded = ['_id', 'inputs'];
 
     protected $with = ['inputs'];
+
+    protected $appends = ['generate_columns'];
 
 
     protected $casts = [
@@ -45,5 +48,17 @@ class MetamorphForm extends BaseModel
     public static function label(): string
     {
         return 'name';
+    }
+
+    public function generateColumns(): Attribute
+    {
+        return Attribute::get(function () {
+            if ($this->getAttribute('columns')) {
+                return $this->getAttribute('columns');
+            } else {
+                $columns = $this->inputs->map(fn($input) => $input->field)->take(5);
+                return $columns->toArray();
+            }
+        });
     }
 }

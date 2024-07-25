@@ -21,7 +21,7 @@ class Metamorph
             return [];
         }
 
-        $extras = Config::models( $form_data['entity'])::extraFields() ?? [];
+        $extras = Config::models($form_data['entity'])::extraFields() ?? [];
 
         $form_inputs = $form['inputs'];
 
@@ -41,14 +41,10 @@ class Metamorph
                 continue;
             }
 
-            if (isset($datum)) {
-                if ($self_input['type'] == 'password'
-                    && $self_input['encrypted'] == true) {
-                    $rtr[$k] = bcrypt($datum);
-                } else {
-                    $rtr[$k] = $datum;
-                }
-
+            if ($self_input['type'] == 'password' && $self_input['encrypted']) {
+                $rtr[$k] = bcrypt($datum);
+            } else {
+                $rtr[$k] = $datum;
             }
         }
         return $rtr;
