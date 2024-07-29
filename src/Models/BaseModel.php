@@ -20,7 +20,7 @@ use MongoDB\Operation\FindOneAndUpdate;
  * @method static Model|mixed find(string $id)
  * @method static Model updateOrCreate(array $search, array $attributes = [])
  * @method static Model create(array $attributes)
- * @method static Builder|Model where(string $column, string $operator = '=', mixed|null $value = null)
+ * @method static Builder|Model where(string $column, mixed $operator, mixed $value = null)
  * @method static Builder|Model whereIn(string $column, array $value = [])
  * @method static Builder|Model orderBy(string $column, string $direction)
  */
