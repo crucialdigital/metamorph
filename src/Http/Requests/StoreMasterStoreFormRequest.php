@@ -27,9 +27,7 @@ class StoreMasterStoreFormRequest extends FormRequest
      */
     public function rules(): array
     {
-        $formRequest = [
-            'form_id' => ['required', 'string', 'exists:metamorph_forms,_id'],
-        ];
+        $formRequest = [];
         $form = MetamorphForm::where('_id', $this->input('form_id'))
             ->orWhere('entity', $this->input('entity'))->first();
         if (!$form) {
