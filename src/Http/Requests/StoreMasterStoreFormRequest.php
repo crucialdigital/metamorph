@@ -33,6 +33,7 @@ class StoreMasterStoreFormRequest extends FormRequest
         if (!$form) {
             abort(404, 'Data model not found !');
         }
+        $this->merge(['form_id' => $form->id]);
         $inputs = [];
 
         if ($form->getAttribute('inputs')) {
