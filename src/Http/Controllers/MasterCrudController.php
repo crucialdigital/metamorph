@@ -7,6 +7,7 @@ use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterStoreFormRequest;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterUpdateFormRequest;
 use CrucialDigital\Metamorph\Metamorph;
+use CrucialDigital\Metamorph\Models\BaseModel;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Exception;
@@ -131,6 +132,9 @@ class MasterCrudController extends Controller implements HasMiddleware
      */
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
+        /**
+         * @var BaseModel $entity
+         */
         $entity = app(Config::models($model))->findOrFail($id);
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
@@ -141,7 +145,7 @@ class MasterCrudController extends Controller implements HasMiddleware
         $formData = Metamorph::mapFormRequestData($data);
         $files = Metamorph::mapFormRequestFiles($request, $id, $request->input('form_id'));
 
-        $entity->fill($formData)->fill($files)->save();
+        $entity->fill($formData)->fill($files)->unsetRelations()->save();
 
         return response()->json($entity->fresh());
     }
