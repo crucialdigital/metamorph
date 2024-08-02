@@ -33,8 +33,12 @@ class MetamorphCommand extends Command
             $content = file_get_contents($path);
             $model = json_decode($content, true);
             if (isset($model['ref'])) {
-                $form = MetamorphForm::updateOrCreate(['ref' => $model['ref']], $model);
-                $form->inputs()->where('metamorph_input', true)->delete();
+                $form_fields = [...$model];
+                unset($form_fields['inputs']);
+                $form = MetamorphForm::updateOrCreate(['ref' => $model['ref']], $form_fields);
+                $form->inputs()->where('metamorph_input', '=', true)->delete();
+
+                //todo: Remove MetamorphFormInput for embedded document for more performance
                 collect($model['inputs'] ?? [])->each(function ($input) use ($form) {
                     if (isset($input['field'])) {
                         MetamorphFormInput::updateOrCreate([
