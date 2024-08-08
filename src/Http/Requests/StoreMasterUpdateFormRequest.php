@@ -27,14 +27,13 @@ class StoreMasterUpdateFormRequest extends FormRequest
      */
     public function rules(): array
     {
-        $formRequest = [
-            'form_id' => ['required', 'string', 'exists:metamorph_forms,_id'],
-        ];
+        $formRequest = [];
         $form = MetamorphForm::where('_id', $this->input('form_id'))
             ->orWhere('entity', $this->input('entity'))->first();
-        if(!$form){
-            abort(404);
+        if (!$form) {
+            abort(404, 'Data model not found !');
         }
+        $this->merge(['form_id' => $form->id]);
         $inputs = [];
 
         if ($form->getAttribute('inputs')) {
