@@ -8,7 +8,6 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use MongoDB\Laravel\Eloquent\Builder;
 use MongoDB\Laravel\Eloquent\Model;
@@ -72,6 +71,8 @@ class ResourceQueryLoader
             $this->builder = $this->builder->withTrashed();
         }
 
+        //Log::debug(json_encode($this->builder->toMql()));
+
         if ($randomize) {
             $data = $this->builder->raw(function ($collection) use ($per_page, $filters) {
                 $conditions = [];
@@ -133,17 +134,19 @@ class ResourceQueryLoader
         $search_filters = [];
         foreach ($queries as $field => $value) {
             $search_filters[] = [
-                'value' => "%$value%",
-                'operator' => 'like',
                 'field' => $field,
-                'group' => 'or_search'
+                'operator' => 'LIKE',
+                'value' => $value,
+                'coordinator' => 'or',
+                'group' => 'and_searchGroup',
             ];
         }
         $filters = request()->input('filters', []);
         request()->merge(['term' => null]);
         request()->query->add(['paginate' => false]);
 
-        $this->filter(array_merge($search_filters, $filters));
+        $filters = array_merge($search_filters, $filters);
+        $this->filter($filters);
     }
 
     /**
@@ -288,6 +291,7 @@ class ResourceQueryLoader
      * @param $input
      * @param $builder
      * @return void
+     * @throws \Exception
      */
     protected function bindFieldFilter($input, $builder = null): void
     {
@@ -315,7 +319,7 @@ class ResourceQueryLoader
                     if ($relationClass instanceof EmbedsOne || $relationClass instanceof EmbedsMany) {
                         $this->bindQuery($relations . '.' . $last, $operator, $value, $coordinator, $builder);
                     } else {
-                        $builder->whereHas($relations, function (Builder $builder) use ($last, $operator, $value, $coordinator) {
+                        $builder->has($relations, '>=', 1, $coordinator, function (Builder $builder) use ($last, $operator, $value, $coordinator) {
                             $this->bindQuery($last, $operator, $value, $coordinator, $builder);
                         });
                     }
