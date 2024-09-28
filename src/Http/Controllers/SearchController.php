@@ -11,30 +11,30 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-class SearchController extends Controller
+class SearchController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
+        $middlewares = [];
         $model = request()->route('entity');
-        $middlewares = Config::modelMiddleware($model);
-        if (isset($middlewares[$model])) {
-            foreach ($middlewares[$model] as $middleware => $only) {
+        $middlewares_config = Config::modelMiddleware($model);
+        if (isset($middlewares_config)) {
+            foreach ($middlewares_config as $middleware => $only) {
                 if (is_string($only) && $only == '*') {
-                    if (class_exists($middleware)) {
-                        $this->middleware($middleware);
-                    }
+                    $middlewares[] = new Middleware($middleware);
                 } else {
-                    if (class_exists($middleware) && is_array($only) && in_array('index', $only)) {
-                        $this->middleware($middleware, ['only' => ['search', 'export']]);
-                    }
+                    $middlewares[] = new Middleware($middleware, only: $only);
                 }
             }
         }
+        return $middlewares;
     }
 
     /**
