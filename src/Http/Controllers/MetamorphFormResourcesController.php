@@ -58,7 +58,8 @@ class MetamorphFormResourcesController extends Controller
                     'group' => 'or_search'
                 ];
             }
-            request()->merge(['filters' => $query]);
+            $filters = request()->input('filters', []);
+            request()->merge(['filters' => array_merge($query, $filters)]);
         }
         request()->merge(['term' => null]);
         request()->query->add(['paginate' => false]);
