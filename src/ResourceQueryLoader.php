@@ -130,35 +130,20 @@ class ResourceQueryLoader
                 $queries[$column] = $term;
             }
         }
-        if ($queries != null && count($queries) > 0) {
-            $this->builder->where(function (Builder $builder) use ($queries) {
-                $i = 0;
-                foreach ($queries as $k => $query) {
-                    if ($i == 0) {
-                        if ($k != '_id') {
-                            $builder->where($k, 'LIKE', '%' . $query . '%');
-                        } else {
-                            if (Str::contains($k, '.')) {
-                                $builder->whereHas($k, $query);
-                            } else {
-                                $builder->where($k, $query);
-                            }
-                        }
-                    } else {
-                        if ($k != '_id') {
-                            $builder->orWhere($k, 'LIKE', '%' . $query . '%');
-                        } else {
-                            if (Str::contains($k, '.')) {
-                                $builder->orWhereHas($k, $query);
-                            } else {
-                                $builder->orWhere($k, $query);
-                            }
-                        }
-                    }
-                    $i++;
-                }
-            });
+        $search_filters = [];
+        foreach ($queries as $field => $value) {
+            $search_filters[] = [
+                'value' => "%$value%",
+                'operator' => 'like',
+                'field' => $field,
+                'group' => 'or_search'
+            ];
         }
+        $filters = request()->input('filters', []);
+        request()->merge(['term' => null]);
+        request()->query->add(['paginate' => false]);
+
+        $this->filter(array_merge($search_filters, $filters));
     }
 
     /**

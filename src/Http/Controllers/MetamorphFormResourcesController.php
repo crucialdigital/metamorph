@@ -52,7 +52,7 @@ class MetamorphFormResourcesController extends Controller
             $query = [];
             foreach ($search as $item) {
                 $query[] = [
-                    'value' => $term,
+                    'value' => "%$term%",
                     'operator' => 'like',
                     'field' => $item,
                     'group' => 'or_search'
