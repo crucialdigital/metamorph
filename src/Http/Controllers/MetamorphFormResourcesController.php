@@ -51,10 +51,16 @@ class MetamorphFormResourcesController extends Controller
         if (isset($term)) {
             $query = [];
             foreach ($search as $item) {
-                $query[$item] = $term;
+                $query[] = [
+                    'value' => $term,
+                    'operator' => 'like',
+                    'field' => $item,
+                    'group' => 'or_search'
+                ];
             }
-            request()->merge(['search' => $query]);
+            request()->merge(['filters' => $query]);
         }
+        request()->merge(['term' => null]);
         request()->query->add(['paginate' => false]);
         return (new ResourceQueryLoader($builder))->load($search);
     }
