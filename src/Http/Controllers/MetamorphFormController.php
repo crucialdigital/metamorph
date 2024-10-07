@@ -47,7 +47,7 @@ class MetamorphFormController extends Controller
             'visibility' => $request->input('visibility'),
         ]);
 
-        if ($form == null) return abort(500);
+        if ($form == null) abort(500);
         return response()->json($form->fresh());
     }
 
@@ -59,7 +59,7 @@ class MetamorphFormController extends Controller
      */
     public function show($id): JsonResponse
     {
-        return response()->json(MetamorphForm::findOrFail($id));
+        return response()->json(MetamorphForm::find($id));
     }
 
     /**

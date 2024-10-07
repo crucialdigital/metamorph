@@ -26,7 +26,7 @@ class MetamorphFormResourcesController extends Controller
     public function fetchResources($entity): JsonResponse
     {
 
-        $model = Config::models( $entity);
+        $model = Config::models($entity);
         $repository = Config::repositories($entity);
 
         $repository = class_exists($repository) ? (new $repository)->builder() : $model::where('_id', 'exists', true);
@@ -35,7 +35,7 @@ class MetamorphFormResourcesController extends Controller
             $data = $this->load($repository, $model::search());
             return response()->json($this->transform($data, $model::label(), $model::labelValue()));
         } else {
-            return response()->json([]);
+            return response()->json();
         }
     }
 
