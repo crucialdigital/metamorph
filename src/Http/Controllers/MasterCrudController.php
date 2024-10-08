@@ -83,13 +83,18 @@ class MasterCrudController extends Controller implements HasMiddleware
         $data = app(Config::models($model))->where('_id', '=', $id);
         $with = ResourceQueryLoader::makeRelations($data);
         if ($with != null) $data = $data->with($with);
-        $data = $data->firstOrFail();
+        $data = $data->first();
+
+        if($data == null){
+            abort(404);
+        }
 
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('view', $policies)) {
             Gate::authorize("view", $data);
         }
+
 
         $form = MetamorphForm::where('entity', $model)->latest()->first();
         $inputs = $form?->getAttribute('inputs');
