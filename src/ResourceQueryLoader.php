@@ -71,8 +71,6 @@ class ResourceQueryLoader
             $this->builder = $this->builder->withTrashed();
         }
 
-        //Log::debug(json_encode($this->builder->toMql()));
-
         if ($randomize) {
             $data = $this->builder->raw(function ($collection) use ($per_page, $filters) {
                 $conditions = [];
@@ -143,8 +141,6 @@ class ResourceQueryLoader
         }
         $filters = request()->input('filters', []);
         request()->merge(['term' => null]);
-        request()->query->add(['paginate' => false]);
-
         $filters = array_merge($search_filters, $filters);
         $this->filter($filters);
     }

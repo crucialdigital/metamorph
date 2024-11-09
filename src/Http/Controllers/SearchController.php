@@ -2,6 +2,7 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
+use CrucialDigital\Metamorph\Resources\MasterCrudResourceCollection;
 use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
@@ -39,7 +40,7 @@ class SearchController extends Controller implements HasMiddleware
 
     /**
      */
-    public function search(Request $request, $entity): JsonResponse
+    public function search(Request $request, $entity)
     {
 
         $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
@@ -52,7 +53,12 @@ class SearchController extends Controller implements HasMiddleware
 
         if ($builder != null) {
             $data = (new ResourceQueryLoader($builder))->load();
-            return response()->json($data);
+            if($request->query('paginate', true)){
+                $form = MetamorphForm::firstWhere('entity', $entity);
+                return (new MasterCrudResourceCollection($data, $form));
+            }else{
+                return response()->json($data);
+            }
         } else {
             return response()->json(null, 404);
         }
