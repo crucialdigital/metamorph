@@ -54,8 +54,7 @@ class SearchController extends Controller implements HasMiddleware
         if ($builder != null) {
             $data = (new ResourceQueryLoader($builder))->load();
             if($request->query('paginate', true)){
-                $form = MetamorphForm::firstWhere('entity', $entity);
-                return (new MasterCrudResourceCollection($data, $form));
+                return (new MasterCrudResourceCollection($data, $entity));
             }else{
                 return response()->json($data);
             }

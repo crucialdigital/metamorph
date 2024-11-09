@@ -2,14 +2,17 @@
 
 namespace CrucialDigital\Metamorph\Resources;
 
+use CrucialDigital\Metamorph\Models\MetamorphForm;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class MasterCrudResourceCollection extends ResourceCollection
 {
-    public function __construct($resource, protected  $form = null)
+    protected ?MetamorphForm $dataModel;
+    public function __construct($resource, protected ?string $form = null)
     {
         parent::__construct($resource);
+        $this->dataModel = MetamorphForm::firstWhere('entity', $this->form);
     }
 
     /**
@@ -26,6 +29,6 @@ class MasterCrudResourceCollection extends ResourceCollection
 
     public function paginationInformation($request, $paginated, $default)
     {
-        return [ ...$default, ...$default['meta'], 'form' => $this->form ];
+        return [ ...$default, ...$default['meta'], 'form' => $this->dataModel ];
     }
 }
