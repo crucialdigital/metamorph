@@ -30,7 +30,7 @@
         "illuminate/support": "^10|^11",
         "intervention/image": "^2.7",
         "maatwebsite/excel": "^3.1",
-        "mongodb/laravel-mongodb": "^5.1",
+        "mongodb/laravel-mongodb": "^4.6",
         "psr/simple-cache": "^2.0|^3.0",
         "spatie/laravel-package-tools": "^1.13.0"
     },
