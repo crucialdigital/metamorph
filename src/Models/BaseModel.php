@@ -31,6 +31,8 @@ abstract class BaseModel extends Model
     protected $guarded = ['_id'];
     protected $appends = ['id'];
 
+    protected $primaryKey = '_id';
+
     protected $casts = [
         'created_at' => 'datetime',
         'update_at' => 'datetime',
