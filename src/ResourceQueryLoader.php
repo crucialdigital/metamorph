@@ -103,10 +103,14 @@ class ResourceQueryLoader
 
                 return $collection->aggregate($aggregate);
             });
-            if ($with != null) $data = $data->load($with);
+            if ($with != null) {
+                $data = $data->load($with);
+            }
             return $data;
         } else {
-            if ($with != null) $this->builder = $this->builder->with($with);
+            if ($with != null) {
+                $this->builder = $this->builder->with($with);
+            }
         }
 
         return $paginate
