@@ -148,8 +148,6 @@ class MasterCrudController extends Controller implements HasMiddleware
         }
         $data = $request->all();
         $formData = Metamorph::mapFormRequestData($data);
-        $formData['form_id'] = $request->input('form_id');
-        $formData['entity'] = $request->input('entity', $entity->entity);
         $files = Metamorph::mapFormRequestFiles($request, $id, $request->input('form_id'));
 
         $entity->fill($formData)->fill($files)->unsetRelations()->save();

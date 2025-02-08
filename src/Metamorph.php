@@ -14,9 +14,11 @@ class Metamorph
 {
     public static function mapFormRequestData(Countable|array $form_data): array
     {
-        $form = MetamorphForm::where('_id', $form_data['form_id'] ?? null)
-            ->orWhere('entity', $form_data['entity'] ?? '__unknown__')
-            ->first();
+        $form = MetamorphForm::find($form_data['form_id']);
+        if (!$form) {
+            $form = MetamorphForm::where('entity', $form_data['entity'] ?? '__unknown__')
+                ->first();
+        }
         if (!$form) {
             return [];
         }
