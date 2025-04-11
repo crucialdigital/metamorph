@@ -29,7 +29,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
     {
         $formRequest = [];
 
-        $form = MetamorphForm::where('_id', $this->input('form_id'))->first();
+        $form = MetamorphForm::where('id', $this->input('form_id'))->first();
         if (!$form) {
             $form = MetamorphForm::where('entity', $this->input('entity'))->first();
         }
@@ -112,7 +112,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
     public function attributes(): array
     {
         $attributes = [];
-        $inputs = MetamorphForm::where('_id', $this->input('form_id'))
+        $inputs = MetamorphForm::where('id', $this->input('form_id'))
                 ->orWhere('entity', $this->input('entity'))->first()
                 ?->getAttribute('inputs') ?? [];
         foreach ($inputs as $input) {

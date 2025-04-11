@@ -120,7 +120,7 @@ class SearchController extends Controller implements HasMiddleware
                 $entity = $set['entity'];
                 $field = $set['field'];
 
-                $data = $this->_makeBuilder($entity)?->whereIn('_id', $value)->get()->toArray();
+                $data = $this->_makeBuilder($entity)?->whereIn('id', $value)->get()->toArray();
                 $data = collect($data)->map(function ($res) use ($entity) {
                     $model = config('metamorph.models.' . $entity);
                     if (class_exists($model) && method_exists($model, 'label')) {
@@ -155,7 +155,7 @@ class SearchController extends Controller implements HasMiddleware
             abort(404, "Model not found !");
         }
 
-        return app($model)->where('_id', 'exists', true);
+        return app($model)->where('id', 'exists', true);
     }
 
 

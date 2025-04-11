@@ -29,7 +29,7 @@ class MetamorphFormResourcesController extends Controller
         $model = Config::models($entity);
         $repository = Config::repositories($entity);
 
-        $repository = class_exists($repository) ? (new $repository)->builder() : $model::where('_id', 'exists', true);
+        $repository = class_exists($repository) ? (new $repository)->builder() : $model::where('id', 'exists', true);
 
         if (class_exists($model) && method_exists($model, 'label')) {
             $data = $this->load($repository, $model::search());
@@ -77,7 +77,7 @@ class MetamorphFormResourcesController extends Controller
     {
         return $collection->map(function (Model $item) use ($label, $labelValue) {
             return [
-                'value' => $item->getAttribute($labelValue) ?? $item->getAttribute('_id'),
+                'value' => $item->getAttribute($labelValue) ?? $item->getAttribute('id'),
                 'label' => $this->getAttribute($item, $label),
             ];
         });

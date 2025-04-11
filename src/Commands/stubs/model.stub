@@ -5,7 +5,7 @@ namespace App\Models;
 
 class {{ class_name }} extends \CrucialDigital\Metamorph\Models\BaseModel
 {
-    protected $guarded = ['_id'];
+    protected $guarded = ['id'];
 
 
     public static function search(): array

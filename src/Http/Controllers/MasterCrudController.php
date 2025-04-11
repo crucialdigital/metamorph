@@ -59,10 +59,10 @@ class MasterCrudController extends Controller implements HasMiddleware
 
         $entity = app(config('metamorph.models.' . $model))->create($formData);
 
-        if ($entity && $entity->_id) {
+        if ($entity && $entity->id) {
             $entity->fill(Metamorph::mapFormRequestFiles(
                 $request,
-                $entity->_id,
+                $entity->id,
                 $request->input('form_id')
             ))->save();
         }
@@ -80,7 +80,7 @@ class MasterCrudController extends Controller implements HasMiddleware
      */
     public function show(string $model, string $id): JsonResponse
     {
-        $data = app(Config::models($model))->where('_id', '=', $id);
+        $data = app(Config::models($model))->where('id', '=', $id);
         $with = ResourceQueryLoader::makeRelations($data);
         if ($with != null) $data = $data->with($with);
         $data = $data->first();

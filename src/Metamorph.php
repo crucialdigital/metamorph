@@ -27,7 +27,7 @@ class Metamorph
 
         $form_inputs = $form['inputs'];
 
-        $rtr = ['form_id' => $form->getAttribute('_id')];
+        $rtr = ['form_id' => $form->getAttribute('id')];
         $rtr['entity'] = $form_data['entity'];
 
         foreach ($form_data as $k => $datum) {

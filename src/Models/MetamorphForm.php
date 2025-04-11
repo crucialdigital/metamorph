@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
 
 class MetamorphForm extends BaseModel
 {
-    protected $guarded = ['_id', 'inputs'];
+    protected $guarded = ['id', 'inputs'];
 
     protected $with = ['inputs'];
 
@@ -31,7 +31,7 @@ class MetamorphForm extends BaseModel
      */
     public function inputs(): HasMany
     {
-        return $this->hasMany(MetamorphFormInput::class, 'form_id', '_id');
+        return $this->hasMany(MetamorphFormInput::class, 'form_id', 'id');
     }
 
     /**

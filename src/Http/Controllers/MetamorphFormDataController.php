@@ -48,7 +48,7 @@ class MetamorphFormDataController extends Controller
         $data = Metamorph::mapFormRequestData($request->all());
         $data['rejected'] = false;
         $entity = MetamorphFormData::create($data);
-        $entity?->fill(Metamorph::mapFormRequestFiles($request, $entity->_id, $request->input('form_id')))->save();
+        $entity?->fill(Metamorph::mapFormRequestFiles($request, $entity->id, $request->input('form_id')))->save();
 
         return response()->json($entity->fresh());
     }
@@ -78,7 +78,7 @@ class MetamorphFormDataController extends Controller
         $data = Metamorph::mapFormRequestData($request->all());
         $data['rejected'] = false;
         $coreFormData = $coreFormData->fill($data);
-        $coreFormData->fill(Metamorph::mapFormRequestFiles($request, $coreFormData->_id, $request->input('form_id')))->save();
+        $coreFormData->fill(Metamorph::mapFormRequestFiles($request, $coreFormData->id, $request->input('form_id')))->save();
         return response()->json($coreFormData->fresh());
     }
 

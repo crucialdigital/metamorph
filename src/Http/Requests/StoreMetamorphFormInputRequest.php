@@ -25,7 +25,7 @@ class StoreMetamorphFormInputRequest extends FormRequest
     {
         return [
             'field' => ['required', 'string'],
-            'form_id' => ['required', 'string', 'exists:metamorph_forms,_id'],
+            'form_id' => ['required', 'string', 'exists:metamorph_forms,id'],
             'name' => ['required', 'string'],
             'width' => ['nullable', 'number', 'min:1', 'max:24'],
             'label' => ['nullable', 'string', 'min:2'],

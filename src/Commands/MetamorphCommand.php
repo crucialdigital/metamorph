@@ -43,7 +43,7 @@ class MetamorphCommand extends Command
                     if (isset($input['field'])) {
                         MetamorphFormInput::updateOrCreate([
                             'field' => $input['field'],
-                            'form_id' => $form->_id
+                            'form_id' => $form->id
                         ],[
                             'metamorph_input' => true,
                             ...$input

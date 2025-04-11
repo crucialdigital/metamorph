@@ -11,7 +11,7 @@ class MetamorphFormData extends BaseModel
 {
     public function Form(): BelongsTo
     {
-        return $this->belongsTo(MetamorphForm::class, 'form_id', '_id');
+        return $this->belongsTo(MetamorphForm::class, 'form_id', 'id');
     }
 
     public static function search(): array

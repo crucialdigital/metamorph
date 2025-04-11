@@ -28,7 +28,7 @@ class DataModelsExport implements FromCollection, WithHeadings, WithChunkReading
             $prepared = [];
             foreach ($this->form->inputs as $input) {
                 if (isset($input['type']) && in_array($input['type'], ['resource', 'multiresource', 'selectresource'])) {
-                    $model = ($ressources[$input['entity']] ?? collect())->where('_id', '=', $data[$input['field']])->first();
+                    $model = ($ressources[$input['entity']] ?? collect())->where('id', '=', $data[$input['field']])->first();
                     if ($model == null) {
                         $prepared[$input['field']] = '';
                     } else {
@@ -64,7 +64,7 @@ class DataModelsExport implements FromCollection, WithHeadings, WithChunkReading
         $data = [];
         foreach ($this->form->inputs as $input) {
             if (isset($input['type']) && in_array($input['type'], ['resource', 'multiresource', 'selectresource'])) {
-                $data[$input['entity']] = $this->_makeBuilder($input['entity'])->whereIn('_id', $collection->pluck($input['field'])->flatten()->unique()->values()->toArray())->get();
+                $data[$input['entity']] = $this->_makeBuilder($input['entity'])->whereIn('id', $collection->pluck($input['field'])->flatten()->unique()->values()->toArray())->get();
             }
         }
 

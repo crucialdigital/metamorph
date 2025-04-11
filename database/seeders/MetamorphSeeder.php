@@ -22,7 +22,7 @@ class MetamorphSeeder extends Seeder
             $form = MetamorphForm::updateOrCreate(['formType' => $model['formType'], 'readOnly' => true], $data);
             collect($model['inputs'])->each(function ($input) use ($form) {
                 MetamorphFormInput::updateOrCreate([
-                    'form_id' => $form->_id,
+                    'form_id' => $form->id,
                     'field' => $input['field']
                 ], $input);
             });

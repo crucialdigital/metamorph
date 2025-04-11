@@ -28,7 +28,7 @@ abstract class BaseModel extends Model
 {
 
     public $timestamps = true;
-    protected $guarded = ['_id'];
+    protected $guarded = ['id'];
     protected $appends = ['id'];
     protected $casts = [
         'created_at' => 'datetime',
@@ -42,7 +42,7 @@ abstract class BaseModel extends Model
 
     public static function labelValue(): string
     {
-        return '_id';
+        return 'id';
     }
 
     public static function exportsFields(): array

@@ -19,7 +19,7 @@ class MetamorphFormController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $coreForm = MetamorphForm::where('_id', 'exists', true);
+        $coreForm = MetamorphForm::where('id', 'exists', true);
         if ($request->has('type') && $request->input('type') !== null) {
             $coreForm = $coreForm->where('entity', $request->query('type'));
         }
