@@ -54,6 +54,16 @@ class Config
 
 
     /**
+     * @param $model
+     * @return array
+     */
+    public static function caches($model): array
+    {
+        return (isset($model)) ? config("metamorph.caches.$model", []) : [];
+    }
+
+
+    /**
      * @return mixed
      */
     public static function resources(): mixed

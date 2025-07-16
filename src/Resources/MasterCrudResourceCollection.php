@@ -27,7 +27,7 @@ class MasterCrudResourceCollection extends ResourceCollection
         ];
     }
 
-    public function paginationInformation($request, $paginated, $default)
+    public function paginationInformation($request, $paginated, $default): array
     {
         return [ ...$default, ...$default['meta'], 'form' => $this->dataModel ];
     }

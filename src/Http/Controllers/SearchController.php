@@ -2,12 +2,13 @@
 
 namespace CrucialDigital\Metamorph\Http\Controllers;
 
-use CrucialDigital\Metamorph\Resources\MasterCrudResourceCollection;
 use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
+use CrucialDigital\Metamorph\Facades\Metamorph;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
+use CrucialDigital\Metamorph\Resources\MasterCrudResourceCollection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,25 +43,19 @@ class SearchController extends Controller implements HasMiddleware
      */
     public function search(Request $request, $entity)
     {
+        if($request->input('no_cache', false)){
+            Metamorph::clearSearchCache($entity);
+        }
 
         $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
+
+        $builder = $this->_makeBuilder($entity);
 
         if (in_array('viewany', $policies)) {
             Gate::authorize("viewAny", config("metamorph.models.$entity"));
         }
 
-        $builder = $this->_makeBuilder($entity);
-
-        if ($builder != null) {
-            $data = (new ResourceQueryLoader($builder))->load();
-            if($request->query('paginate', true)){
-                return (new MasterCrudResourceCollection($data, $entity));
-            }else{
-                return response()->json($data);
-            }
-        } else {
-            return response()->json(null, 404);
-        }
+        return $this->searchResponse($request, $entity, $builder);
     }
 
     /**
@@ -156,6 +151,21 @@ class SearchController extends Controller implements HasMiddleware
         }
 
         return app($model)->where('id', 'exists', true);
+    }
+
+    private function searchResponse($request, $entity, $builder)
+    {
+
+        if ($builder != null) {
+            $data = (new ResourceQueryLoader($builder))->load();
+            if($request->query('paginate', true)){
+                return (new MasterCrudResourceCollection($data, $entity));
+            }else{
+                return response()->json($data);
+            }
+        } else {
+            return response()->json(null, 404);
+        }
     }
 
 

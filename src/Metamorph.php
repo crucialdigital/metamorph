@@ -6,7 +6,9 @@ use Countable;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\Models\MetamorphFormInput;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 
@@ -116,5 +118,29 @@ class Metamorph
         $rtr = Storage::put($dest_path, file_get_contents($src_path), 'public');
         unlink($src_path);
         return $rtr ? $dest_path : null;
+    }
+
+    public static function clearSearchCache($entity): void
+    {
+        /*return;
+        if (config('cache.default') === 'redis') {
+
+            $group = '';
+            if(count(Config::caches($entity)) != 0){
+                $group = implode("_", collect(request()->only(Config::caches($entity)))->values()->toArray());
+            }
+            $redis = Redis::connection('cache');
+            $keys = $redis->keys("*{$group}_search_{$entity}_*");
+            foreach ($keys as $key) {
+                $cleanKey = str_replace([config('cache.prefix', ''), 'novacole_database_'], '', $key);
+                Cache::forget($cleanKey);
+            }
+        }*/
+    }
+
+    public static function hasCache($entity): bool
+    {
+        $cacheSet = Config::caches($entity);
+        return count($cacheSet) > 0;
     }
 }

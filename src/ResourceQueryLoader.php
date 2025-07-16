@@ -39,6 +39,7 @@ class ResourceQueryLoader
             return [];
         }
         $per_page = (int)request()->query('per_page', 15);
+        $limit = (int)request()->query('limit');
         $order_by = request()->query('order_by', 'created_at');
         $order_direction = request()->query('order_direction', 'ASC');
         $paginate = (bool)request()->query('paginate', true);
@@ -59,7 +60,7 @@ class ResourceQueryLoader
 
         foreach (explode('|', $order_by) as $k => $str) {
             $directions = explode('|', $order_direction);
-            $direction = $directions[$k] ?? $directions[0];
+            $direction = $directions[$k] ?? $directions[0] ?? 'ASC';
             $this->builder = $this->builder->orderBy($str, $direction);
         }
 
@@ -69,6 +70,9 @@ class ResourceQueryLoader
 
         if ($with_trash) {
             $this->builder = $this->builder->withTrashed();
+        }
+        if ($limit) {
+            $this->builder = $this->builder->limit($limit);
         }
 
         if ($randomize) {

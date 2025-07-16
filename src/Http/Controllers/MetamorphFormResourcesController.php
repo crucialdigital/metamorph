@@ -68,14 +68,14 @@ class MetamorphFormResourcesController extends Controller
     }
 
     /**
-     * @param Collection $collection
+     * @param Collection|array $collection
      * @param string $label
      * @param string $labelValue
      * @return Collection
      */
-    private function transform(Collection $collection, string $label, string $labelValue): Collection
+    private function transform(Collection|array $collection, string $label, string $labelValue): Collection
     {
-        return $collection->map(function (Model $item) use ($label, $labelValue) {
+        return collect($collection)->map(function (Model $item) use ($label, $labelValue) {
             return [
                 'value' => $item->getAttribute($labelValue) ?? $item->getAttribute('id'),
                 'label' => $this->getAttribute($item, $label),

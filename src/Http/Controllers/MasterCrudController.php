@@ -16,8 +16,8 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
-use MongoDB\Laravel\Eloquent\Builder;
 
 class MasterCrudController extends Controller implements HasMiddleware
 {
@@ -66,7 +66,7 @@ class MasterCrudController extends Controller implements HasMiddleware
                 $request->input('form_id')
             ))->save();
         }
-
+        Metamorph::clearSearchCache($model);
         return response()->json($entity->fresh());
 
     }
@@ -80,49 +80,54 @@ class MasterCrudController extends Controller implements HasMiddleware
      */
     public function show(string $model, string $id): JsonResponse
     {
-        $data = app(Config::models($model))->where('id', '=', $id);
-        $with = ResourceQueryLoader::makeRelations($data);
-        if ($with != null) $data = $data->with($with);
-        $data = $data->first();
+        //$datum = Cache::remember("{$model}_$id", 86400, function () use ($model, $id) {
+            $columns = request()->query('columns', ['*']);
+            $data = app(Config::models($model))->where('id', '=', $id);
+            $with = ResourceQueryLoader::makeRelations($data);
+            if ($with != null) $data = $data->with($with);
+            $columns = is_array($columns) ? $columns : explode('|', $columns);
+            $data = $data->first($columns);
 
-        if($data == null){
-            abort(404);
-        }
+            if($data == null){
+                abort(404);
+            }
 
-        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
+            $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
-        if (in_array('view', $policies)) {
-            Gate::authorize("view", $data);
-        }
+            if (in_array('view', $policies)) {
+                Gate::authorize("view", $data);
+            }
 
 
-        $form = MetamorphForm::where('entity', $model)->latest()->first();
-        $inputs = $form?->getAttribute('inputs');
-        if ($inputs) {
-            $metas = collect($inputs)
-                ->filter(function ($input) {
-                    return in_array($input['type'], ['resource', 'multiresource', 'selectresource']);
-                })->map(function ($el) use ($data) {
-                    try {
-                        $res = app(Config::models($el['entity']))->find($data[$el['field']]);
-                    } catch (Exception $e) {
-                        $res = null;
-                    }
-                    if ($res instanceof Countable) {
-                        $value = join(', ', collect($res)->map(function ($entry) use ($el) {
-                            return $entry->getAttribute(Config::models($el['entity'])::label());
-                        })->values()->toArray());
-                    } else {
-                        $value = $res ? $res->getAttribute(Config::models($el['entity'])::label()) : '';
-                    }
-                    return [
-                        'label' => $el['field'],
-                        'value' => $value
-                    ];
-                });
+            $form = MetamorphForm::where('entity', $model)->latest()->first();
+            $inputs = $form?->getAttribute('inputs');
+            if ($inputs) {
+                $metas = collect($inputs)
+                    ->filter(function ($input) {
+                        return in_array($input['type'], ['resource', 'multiresource', 'selectresource']);
+                    })->map(function ($el) use ($data) {
+                        try {
+                            $res = app(Config::models($el['entity']))->find($data[$el['field']]);
+                        } catch (Exception $e) {
+                            $res = null;
+                        }
+                        if ($res instanceof Countable) {
+                            $value = join(', ', collect($res)->map(function ($entry) use ($el) {
+                                return $entry->getAttribute(Config::models($el['entity'])::label());
+                            })->values()->toArray());
+                        } else {
+                            $value = $res ? $res->getAttribute(Config::models($el['entity'])::label()) : '';
+                        }
+                        return [
+                            'label' => $el['field'],
+                            'value' => $value
+                        ];
+                    });
 
-            $data['meta_data'] = array_values($metas->toArray());
-        }
+                $data['meta_data'] = array_values($metas->toArray());
+            }
+            //return $data;
+        //});
 
         return response()->json($data);
     }
@@ -137,6 +142,9 @@ class MasterCrudController extends Controller implements HasMiddleware
      */
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
+
+        Cache::forget("{$model}_$id");
+        Metamorph::clearSearchCache($model);
         /**
          * @var BaseModel $entity
          */
@@ -165,6 +173,9 @@ class MasterCrudController extends Controller implements HasMiddleware
     public function destroy(string $model, string $id): JsonResponse
     {
 
+        Cache::forget("{$model}_$id");
+        Metamorph::clearSearchCache($model);
+
         $data = app(Config::models($model))->findOrFail($id);
 
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
@@ -174,6 +185,31 @@ class MasterCrudController extends Controller implements HasMiddleware
         }
 
         $data?->delete();
+        return response()->json($data);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param string $model
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function delete(string $model, string $id): JsonResponse
+    {
+
+        Cache::forget("{$model}_$id");
+        Metamorph::clearSearchCache($model);
+
+        $data = app(Config::models($model))->withTrashed()->findOrFail($id);
+
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
+
+        if (in_array('forcedelete', $policies)) {
+            Gate::authorize("forcedelete", $data);
+        }
+
+        $data?->forceDelete();
         return response()->json($data);
     }
 }
