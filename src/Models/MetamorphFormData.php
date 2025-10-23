@@ -14,7 +14,7 @@ class MetamorphFormData extends BaseModel
         return $this->belongsTo(MetamorphForm::class, 'form_id', 'id');
     }
 
-    public static function search(): array
+    public static function searchField(): array
     {
         return [];
     }

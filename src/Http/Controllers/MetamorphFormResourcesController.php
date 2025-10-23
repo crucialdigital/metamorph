@@ -5,6 +5,7 @@ namespace CrucialDigital\Metamorph\Http\Controllers;
 
 use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
+use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
@@ -23,6 +24,9 @@ class MetamorphFormResourcesController extends Controller
         return response()->json($r);
     }
 
+    /**
+     * @throws Exception
+     */
     public function fetchResources($entity): JsonResponse
     {
 
@@ -32,7 +36,7 @@ class MetamorphFormResourcesController extends Controller
         $repository = class_exists($repository) ? (new $repository)->builder() : $model::where('id', 'exists', true);
 
         if (class_exists($model) && method_exists($model, 'label')) {
-            $data = $this->load($repository, $model::search());
+            $data = $this->load($repository, $model::searchField());
             return response()->json($this->transform($data, $model::label(), $model::labelValue()));
         } else {
             return response()->json();
@@ -43,6 +47,7 @@ class MetamorphFormResourcesController extends Controller
      * @param $builder
      * @param array $search
      * @return \Illuminate\Database\Eloquent\Collection|LengthAwarePaginator|array
+     * @throws Exception
      */
 
     private function load($builder, array $search = []): Collection|LengthAwarePaginator|array
@@ -64,7 +69,7 @@ class MetamorphFormResourcesController extends Controller
         }
         request()->merge(['term' => null]);
         request()->query->add(['paginate' => false]);
-        return (new ResourceQueryLoader($builder))->load($search);
+        return new ResourceQueryLoader($builder)->load($search);
     }
 
     /**

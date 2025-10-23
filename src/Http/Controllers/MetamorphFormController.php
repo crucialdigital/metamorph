@@ -98,6 +98,6 @@ class MetamorphFormController extends Controller
         $form = MetamorphForm::where('entity', $entity)
             ->latest()
             ->first();
-        return $form != null ? response()->json($form) : abort(404);
+        return $form != null ? response()->json($form) : response()->json(404);
     }
 }

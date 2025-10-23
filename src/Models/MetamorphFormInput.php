@@ -16,7 +16,7 @@ class MetamorphFormInput extends BaseModel
     ];
     protected $guarded = ['id', 'id'];
 
-    public static function search(): array
+    public static function searchField(): array
     {
         return ['name', 'field', 'label'];
     }

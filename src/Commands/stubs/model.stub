@@ -8,7 +8,7 @@ class {{ class_name }} extends \CrucialDigital\Metamorph\Models\BaseModel
     protected $guarded = ['id'];
 
 
-    public static function search(): array
+    public static function searchField(): array
     {
         return {{ search_fields }};
     }

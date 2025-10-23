@@ -14,9 +14,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
 class MasterCrudController extends Controller implements HasMiddleware
@@ -89,7 +87,7 @@ class MasterCrudController extends Controller implements HasMiddleware
             $data = $data->first($columns);
 
             if($data == null){
-                abort(404);
+                abort(404, __('http-statuses.404'));
             }
 
             $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
@@ -142,13 +140,13 @@ class MasterCrudController extends Controller implements HasMiddleware
      */
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
-
-        Cache::forget("{$model}_$id");
-        Metamorph::clearSearchCache($model);
         /**
          * @var BaseModel $entity
          */
-        $entity = app(Config::models($model))->findOrFail($id);
+        $entity = app(Config::models($model))->find($id);
+        if(!isset($entity)){
+            abort(404, __('http-statuses.404'));
+        }
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('update', $policies)) {
@@ -173,10 +171,11 @@ class MasterCrudController extends Controller implements HasMiddleware
     public function destroy(string $model, string $id): JsonResponse
     {
 
-        Cache::forget("{$model}_$id");
-        Metamorph::clearSearchCache($model);
+        $data = app(Config::models($model))->find($id);
 
-        $data = app(Config::models($model))->findOrFail($id);
+        if (!$data) {
+            abort(404, __('http-statuses.404'));
+        }
 
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
@@ -184,7 +183,7 @@ class MasterCrudController extends Controller implements HasMiddleware
             Gate::authorize("delete", $data);
         }
 
-        $data?->delete();
+        $data->delete();
         return response()->json($data);
     }
 
@@ -197,11 +196,11 @@ class MasterCrudController extends Controller implements HasMiddleware
      */
     public function delete(string $model, string $id): JsonResponse
     {
+        $data = app(Config::models($model))->withTrashed()->find($id);
 
-        Cache::forget("{$model}_$id");
-        Metamorph::clearSearchCache($model);
-
-        $data = app(Config::models($model))->withTrashed()->findOrFail($id);
+        if (!$data) {
+            abort(404, __('http-statuses.404'));
+        }
 
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
@@ -209,7 +208,34 @@ class MasterCrudController extends Controller implements HasMiddleware
             Gate::authorize("forcedelete", $data);
         }
 
-        $data?->forceDelete();
+        $data->forceDelete();
         return response()->json($data);
+    }
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param string $model
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function restore(string $model, string $id): JsonResponse
+    {
+        /**
+         * @var BaseModel $data
+         */
+        $data = app(Config::models($model))->withTrashed()->find($id);
+
+        if (!$data) {
+            abort(404, __('http-statuses.404'));
+        }
+
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
+
+        if (in_array('restore', $policies)) {
+            Gate::authorize("restore", $data);
+        }
+
+        $data->restore();
+        return response()->json($data->fresh());
     }
 }

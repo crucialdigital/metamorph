@@ -57,7 +57,7 @@ app/Models/Post.php
 ```  
 Is Laravel Eloquent model extends from `CrucialDigital\Metamorph\BaseModel.php` class. 
 You are free to create your model with [Laravel syntax](https://laravel.com/docs/11.x/eloquent#generating-model-classes)
-and extends `CrucialDigital\Metamorph\BaseModel.php`. Consider implement `label()` and `search()` method responsible
+and extends `CrucialDigital\Metamorph\BaseModel.php`. Consider implement `label()` and `searchField()` method responsible
 respectively for labeling form resource and define field on witch query with default search `term`
 ```bash
 php artisan make:model Post
@@ -245,7 +245,7 @@ Available endpoint are :
 
 
 >NOTE  
->`field` : value of filters can be nested relation field ``i.e: comments.user._id``  
+>`field` : value of filters can be nested relation field ``i.e: comments.user.id``  
 > `coordinator` : one of `and`, `or` to indicate using where(...) / orWhere(...)  
 > `group` : is used to group filter criteria into sub-query; the value must start with one of `and_` `or_`  
 

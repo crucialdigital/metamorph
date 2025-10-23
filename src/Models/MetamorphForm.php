@@ -37,7 +37,7 @@ class MetamorphForm extends BaseModel
     /**
      * @return string[]
      */
-    public static function search(): array
+    public static function searchField(): array
     {
         return ['name', 'entity'];
     }

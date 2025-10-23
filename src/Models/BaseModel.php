@@ -30,7 +30,7 @@ abstract class BaseModel extends Model
 
     protected $primaryKey = 'id';
     public $timestamps = true;
-    protected $guarded = ['id'];
+    protected $guarded = ['id', '_id', 'created_at', 'updated_at', 'deleted_at'];
     protected $appends = ['id'];
 
     protected $casts = [
@@ -39,7 +39,7 @@ abstract class BaseModel extends Model
         'deleted_at' => 'datetime',
     ];
 
-    public static abstract function search(): array;
+    public static abstract function searchField(): array;
 
     public static abstract function label(): string;
 

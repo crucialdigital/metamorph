@@ -63,6 +63,7 @@ class SearchController extends Controller implements HasMiddleware
      * @param $entity
      * @param $form
      * @return Response|BinaryFileResponse|JsonResponse
+     * @throws \Exception
      */
 
     public function export(Request $request, $entity, $form): Response|BinaryFileResponse|JsonResponse
@@ -81,7 +82,7 @@ class SearchController extends Controller implements HasMiddleware
         if ($builder != null) {
             $data = (new ResourceQueryLoader($builder))->load();
             $format = $request->input('format', 'CSV');
-            $writerType = match (mb_strtoupper($format)) {
+            $writerType = match (Str::upper($format ?? '')) {
                 'XLSX' => Excel::XLSX,
                 'XLS' => Excel::XLS,
                 'PDF' => Excel::DOMPDF,
@@ -89,7 +90,7 @@ class SearchController extends Controller implements HasMiddleware
                 default => Excel::CSV,
             };
             return (new DataModelsExport($data, $form))
-                ->download($entity . "." . mb_strtolower($format), $writerType);
+                ->download($entity . "." . Str::lower($format ?? ''), $writerType);
         } else {
             return response()->json(null, 404);
         }

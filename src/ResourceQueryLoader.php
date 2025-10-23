@@ -18,7 +18,7 @@ class ResourceQueryLoader
 {
     protected Builder|Model|null $builder;
 
-    const OPERATOR = [
+    const array OPERATOR = [
         '=' => '$eq',
         '>' => '$gt',
         '>=' => '$gte',
@@ -33,6 +33,9 @@ class ResourceQueryLoader
         $this->builder = $builder;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function load($columns = ['*']): LengthAwarePaginator|array|Expression|Collection
     {
         if (!($this->builder instanceof Builder)) {
@@ -126,13 +129,14 @@ class ResourceQueryLoader
     /**
      * @param mixed $search
      * @return void
+     * @throws \Exception
      */
     private function search(mixed $search): void
     {
         $queries = (!is_array($search)) ? (json_decode($search, true) ?? []) : $search;
         $term = request()->query('term');
         if (isset($term)) {
-            $columns = $this->builder->getModel()::class::search() ?? [];
+            $columns = $this->builder->getModel()::class::searchField() ?? [];
             foreach ($columns as $column) {
                 $queries[$column] = $term;
             }
@@ -156,6 +160,7 @@ class ResourceQueryLoader
     /**
      * @param $queries
      * @return void
+     * @throws \Exception
      */
     private function filter($queries): void
     {
@@ -203,9 +208,16 @@ class ResourceQueryLoader
             : [];
 
         $with = [...$query_relations, ...$input_relations];
-        return count($with) > 0 ? collect($with)->filter(function ($relation) use (&$builder) {
-            return method_exists(get_class($builder->getModel()), $relation);
-        })->toArray() : null;
+
+        if (count($with) === 0) {
+            return null;
+        }
+
+        $model = $builder->getModel();
+
+        return collect($with)
+            ->filter(fn ($relation) => is_callable([$model, $relation]))
+            ->toArray();
     }
 
     /**
@@ -214,16 +226,11 @@ class ResourceQueryLoader
      */
     protected function getDateArrayValue(mixed $value): array
     {
-        if (is_array($value)) {
-            if (count($value) >= 2) {
-                $value = [new Carbon($value[0]), new  Carbon($value[1])];
-            } else {
-                $value = [new Carbon($value[0] ?? null), new  Carbon($value[0] ?? null)];
-            }
-        } else {
-            $value = [new Carbon($value), new  Carbon($value)];
-        }
-        return $value;
+        $dates = is_array($value) ? $value : [$value];
+        $start = Carbon::parse($dates[0] ?? now());
+        $end = Carbon::parse($dates[1] ?? $dates[0] ?? now());
+
+        return [$start, $end];
     }
 
     /**
@@ -234,7 +241,7 @@ class ResourceQueryLoader
      * @param Builder|null $builder
      * @return void
      */
-    protected function bindQuery($field, $operator, $value, string $coordinator = 'and', Builder $builder = null): void
+    protected function bindQuery($field, $operator, $value, string $coordinator = 'and', ?Builder $builder = null): void
     {
         if ($builder == null) {
             //In case of relation sub-query, don't use the global builder
@@ -274,6 +281,22 @@ class ResourceQueryLoader
                 break;
             case 'DATEAFTEREQ':
                 $builder->whereDate($field, '>=', $value, Str::lower($coordinator));
+                break;
+            case 'DATETIMEBEFORE':
+                $builder->whereDate($field, '<', $value, Str::lower($coordinator))
+                    ->whereTime($field, '<', new Carbon($value), Str::lower($coordinator));
+                break;
+            case 'DATETIMEAFTER':
+                $builder->whereDate($field, '>', $value, Str::lower($coordinator))
+                    ->whereTime($field, '>', new Carbon($value), Str::lower($coordinator));
+                break;
+            case 'DATETIMEBEFOREQ':
+                $builder->whereDate($field, '<=', $value, Str::lower($coordinator))
+                    ->whereTime($field, '<=', new Carbon($value), Str::lower($coordinator));
+                break;
+            case 'DATETIMEAFTEREQ':
+                $builder->whereDate($field, '>=', $value, Str::lower($coordinator))
+                    ->whereTime($field, '>=', new Carbon($value), Str::lower($coordinator));
                 break;
             case 'DATENOT':
                 $builder->whereDate($field, '!=', $value, Str::lower($coordinator));
