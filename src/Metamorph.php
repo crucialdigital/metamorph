@@ -122,25 +122,11 @@ class Metamorph
 
     public static function clearSearchCache($entity): void
     {
-        /*return;
-        if (config('cache.default') === 'redis') {
-
-            $group = '';
-            if(count(Config::caches($entity)) != 0){
-                $group = implode("_", collect(request()->only(Config::caches($entity)))->values()->toArray());
-            }
-            $redis = Redis::connection('cache');
-            $keys = $redis->keys("*{$group}_search_{$entity}_*");
-            foreach ($keys as $key) {
-                $cleanKey = str_replace([config('cache.prefix', ''), 'novacole_database_'], '', $key);
-                Cache::forget($cleanKey);
-            }
-        }*/
+        app(\CrucialDigital\Metamorph\MetamorphCacheService::class)->invalidate($entity);
     }
 
     public static function hasCache($entity): bool
     {
-        $cacheSet = Config::caches($entity);
-        return count($cacheSet) > 0;
+        return app(\CrucialDigital\Metamorph\MetamorphCacheService::class)->isEnabled($entity);
     }
 }

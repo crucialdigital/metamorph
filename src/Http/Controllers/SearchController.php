@@ -9,6 +9,7 @@ use CrucialDigital\Metamorph\Facades\Metamorph;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use CrucialDigital\Metamorph\Resources\MasterCrudResourceCollection;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class SearchController extends Controller implements HasMiddleware
     }
 
     /**
+     * @throws Exception
      */
     public function search(Request $request, $entity)
     {
@@ -63,7 +65,7 @@ class SearchController extends Controller implements HasMiddleware
      * @param $entity
      * @param $form
      * @return Response|BinaryFileResponse|JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
 
     public function export(Request $request, $entity, $form): Response|BinaryFileResponse|JsonResponse
@@ -80,7 +82,7 @@ class SearchController extends Controller implements HasMiddleware
         $builder = $this->_makeBuilder($entity);
 
         if ($builder != null) {
-            $data = (new ResourceQueryLoader($builder))->load();
+            $data = new ResourceQueryLoader($builder)->load();
             $format = $request->input('format', 'CSV');
             $writerType = match (Str::upper($format ?? '')) {
                 'XLSX' => Excel::XLSX,
@@ -89,7 +91,7 @@ class SearchController extends Controller implements HasMiddleware
                 'ODS' => Excel::ODS,
                 default => Excel::CSV,
             };
-            return (new DataModelsExport($data, $form))
+            return new DataModelsExport($data, $form)
                 ->download($entity . "." . Str::lower($format ?? ''), $writerType);
         } else {
             return response()->json(null, 404);
@@ -154,14 +156,26 @@ class SearchController extends Controller implements HasMiddleware
         return app($model)->where('id', 'exists', true);
     }
 
+    /**
+     * @throws Exception
+     */
     private function searchResponse($request, $entity, $builder)
     {
-
         if ($builder != null) {
-            $data = (new ResourceQueryLoader($builder))->load();
-            if($request->query('paginate', true)){
+            $cacheService = app(\CrucialDigital\Metamorph\MetamorphCacheService::class);
+            $cacheEnabled = $cacheService->isEnabled($entity) && !$request->input('no_cache', false);
+
+            if ($cacheEnabled) {
+                $data = $cacheService->remember($entity, $request->all(), function () use ($builder) {
+                    return new ResourceQueryLoader($builder)->load();
+                });
+            } else {
+                $data = new ResourceQueryLoader($builder)->load();
+            }
+
+            if ($request->query('paginate', true)) {
                 return (new MasterCrudResourceCollection($data, $entity));
-            }else{
+            } else {
                 return response()->json($data);
             }
         } else {

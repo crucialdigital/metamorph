@@ -97,8 +97,42 @@ return [
     ],
 
     /**
-     * Active caches for spécific models
+     * Cache configuration
+     * Allows enabling/disabling caching system and configuring tenant settings.
      */
-    'caches' => [
+    'cache' => [
+        'enabled' => env('METAMORPH_CACHE_ENABLED', true),
+
+        // Default TTL for cached responses in seconds
+        'ttl' => env('METAMORPH_CACHE_TTL', 3600),
+
+        // Custom Laravel cache store to use (e.g., 'redis', 'memcached')
+        // Null means default cache store
+        'store' => null,
+
+        // How to resolve the tenant ID for caching context
+        // 'auto' : checks header, then user attribute, then 'global'
+        // 'header' : exclusively uses the tenant header
+        // 'callback' : executes 'tenant_resolver' closure
+        'tenant_mode' => 'auto',
+
+        // Header name containing the tenant identifier (for 'auto' and 'header' modes)
+        'tenant_header' => 'X-Tenant-Id',
+
+        // Attribute on the authenticated user model to use as tenant ID (for 'auto' mode)
+        'tenant_field' => 'ecole_id',
+
+        // Custom closure to resolve the tenant ID (for 'callback' mode)
+        'tenant_resolver' => null,
+
+        // Entities where caching is explicitly enabled.
+        // true = enabled (uses global ttl)
+        // int = enabled with specific ttl in seconds
+        // false = explicitly disabled
+        'entities' => [
+            // 'post' => true,
+            // 'category' => 7200,
+            // 'user' => false,
+        ],
     ],
 ];

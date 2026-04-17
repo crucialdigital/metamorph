@@ -23,7 +23,7 @@ use MongoDB\Operation\FindOneAndUpdate;
  * @method static Model create(array $attributes)
  * @method static Builder|Model where(string|Closure $column, mixed $operator, mixed|null $value = null)
  * @method static Builder|Model whereIn(string $column, array $value = [])
- * @method static Builder|Model orderBy(string $column, string $direction)
+ * @method static Builder|Model orderBy(string $column, string $direction = 'asc')
  */
 abstract class BaseModel extends Model
 {

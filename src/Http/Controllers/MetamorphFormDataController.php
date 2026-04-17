@@ -120,16 +120,17 @@ class MetamorphFormDataController extends Controller
      */
     public function validateFormData(Request $request, $id): JsonResponse
     {
-        $data = MetamorphFormData::findOrFail($id);
-        $model = config('metamorph.entity.' . $data['entity']);
-        $data = array_merge($data->toArray(), $request->all());
+        $formData = MetamorphFormData::findOrFail($id);
+        $modelClass = config('metamorph.models.' . $formData['entity']);
+        $attributes = array_merge($formData->toArray(), $request->all());
 
         try {
-            $data = $model::create($data);
-            if ($data) {
+            $entity = $modelClass::create($attributes);
+            if ($entity) {
                 MetamorphFormData::destroy($id);
+                \CrucialDigital\Metamorph\Facades\Metamorph::clearSearchCache($formData['entity']);
             }
-            return response()->json($data);
+            return response()->json($entity);
         } catch (\Exception $exception) {
             return response()->json($exception->getMessage());
         }
