@@ -5,7 +5,6 @@ namespace CrucialDigital\Metamorph\Http\Requests;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\Rules\GeoPointRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class StoreMasterUpdateFormRequest extends FormRequest
@@ -28,17 +27,19 @@ class StoreMasterUpdateFormRequest extends FormRequest
      */
     public function rules(): array
     {
-        $formRequest = [
-            'form_id' => ['required', 'string', 'exists:metamorph_forms,_id'],
-        ];
-        $form = MetamorphForm::where('_id', $this->input('form_id'))
-            ->orWhere('entity', $this->input('entity'))->first();
-        if(!$form){
-            abort(404);
+        $formRequest = [];
+
+        $form = MetamorphForm::where('id', $this->input('form_id'))->first();
+        if (!$form) {
+            $form = MetamorphForm::where('entity', $this->input('entity'))->first();
         }
+        if(!$form){
+            abort(404, 'Data model not found !');
+        }
+        $this->merge(['form_id' => $form->id]);
         $inputs = [];
 
-        if ($form && $form->getAttribute('inputs')) {
+        if ($form->getAttribute('inputs')) {
             $inputs = $form->getAttribute('inputs');
         } else {
             abort(422, 'No field found !');
@@ -50,7 +51,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
         $type_match = [
             'text' => ['string'],
             'longtext' => ['string'],
-            'select' => ['string'],
+            'select' => [],
             'multiselect' => ['array'],
             'resource' => ['string'],
             'number' => ['numeric'],
@@ -67,7 +68,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
 
         foreach ($inputs as $input) {
             $rules = [];
-            $rules[] = (isset($input['required']) && $input['required'] == true) ? 'filled' : 'nullable';
+            $rules[] = (isset($input['required']) && $input['required']) ? 'filled' : 'nullable';
 
             if (isset($input['type']) && isset($type_match[$input['type']])) {
                 $rules = [...$rules, ...$type_match[$input['type']]];
@@ -95,7 +96,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
                 })->toArray());
                 $rules [] = 'in:' . $list;
             }
-            if (isset($input['rules']) && isset($input['rules']['update'])) {
+            if (isset($input['rules']['update'])) {
                 $r = explode('|', $input['rules']['update']);
                 foreach ($r as $str) {
                     if (!in_array($str, $rules)) {
@@ -111,7 +112,7 @@ class StoreMasterUpdateFormRequest extends FormRequest
     public function attributes(): array
     {
         $attributes = [];
-        $inputs = MetamorphForm::where('_id', $this->input('form_id'))
+        $inputs = MetamorphForm::where('id', $this->input('form_id'))
                 ->orWhere('entity', $this->input('entity'))->first()
                 ?->getAttribute('inputs') ?? [];
         foreach ($inputs as $input) {

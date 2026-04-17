@@ -5,73 +5,74 @@ namespace CrucialDigital\Metamorph\Http\Controllers;
 use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\DataRepositoryBuilder;
 use CrucialDigital\Metamorph\Exports\DataModelsExport;
+use CrucialDigital\Metamorph\Facades\Metamorph;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
-use Illuminate\Auth\Access\AuthorizationException;
+use CrucialDigital\Metamorph\Resources\MasterCrudResourceCollection;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-class SearchController extends Controller
+class SearchController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
+        $middlewares = [];
         $model = request()->route('entity');
-        $middlewares = Config::modelMiddleware($model);
-        if (isset($middlewares[$model])) {
-            foreach ($middlewares[$model] as $middleware => $only) {
+        $middlewares_config = Config::modelMiddleware($model);
+        if (isset($middlewares_config)) {
+            foreach ($middlewares_config as $middleware => $only) {
                 if (is_string($only) && $only == '*') {
-                    if (class_exists($middleware)) {
-                        $this->middleware($middleware);
-                    }
+                    $middlewares[] = new Middleware($middleware);
                 } else {
-                    if (class_exists($middleware) && is_array($only) && in_array('index', $only)) {
-                        $this->middleware($middleware, ['only' => ['search', 'export']]);
-                    }
+                    $middlewares[] = new Middleware($middleware, only: $only);
                 }
             }
         }
+        return $middlewares;
     }
 
     /**
+     * @throws Exception
      */
-    public function search(Request $request, $entity): JsonResponse
+    public function search(Request $request, $entity)
     {
-
-        $policies = collect(Config::policies($entity))->map(fn($police)=> Str::lower($police))->toArray();
-
-        if (in_array('viewany', $policies)) {
-            Log::debug(Auth::user());
-            Gate::authorize("viewAny", config("metamorph.models.$entity"));
+        if($request->input('no_cache', false)){
+            Metamorph::clearSearchCache($entity);
         }
+
+        $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
 
         $builder = $this->_makeBuilder($entity);
 
-        if ($builder != null) {
-            $data = (new ResourceQueryLoader($builder))->load();
-            return response()->json($data);
-        } else {
-            return response()->json(null, 404);
+        if (in_array('viewany', $policies)) {
+            Gate::authorize("viewAny", config("metamorph.models.$entity"));
         }
+
+        return $this->searchResponse($request, $entity, $builder);
     }
 
     /**
+     * @param Request $request
      * @param $entity
      * @param $form
      * @return Response|BinaryFileResponse|JsonResponse
+     * @throws Exception
      */
 
-    public function export($entity, $form): Response|BinaryFileResponse|JsonResponse
+    public function export(Request $request, $entity, $form): Response|BinaryFileResponse|JsonResponse
     {
 
-        $policies = collect(Config::policies($entity))->map(fn($police)=> Str::lower($police))->toArray();
+        set_time_limit(0);
+        $policies = collect(Config::policies($entity))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('viewany', $policies)) {
             Gate::authorize("viewAny", config("metamorph.models.$entity"));
@@ -81,9 +82,17 @@ class SearchController extends Controller
         $builder = $this->_makeBuilder($entity);
 
         if ($builder != null) {
-            $data = (new ResourceQueryLoader($builder))->load();
-            return (new DataModelsExport($data, $form))
-                ->download($entity . '.csv', Excel::CSV);
+            $data = new ResourceQueryLoader($builder)->load();
+            $format = $request->input('format', 'CSV');
+            $writerType = match (Str::upper($format ?? '')) {
+                'XLSX' => Excel::XLSX,
+                'XLS' => Excel::XLS,
+                'PDF' => Excel::DOMPDF,
+                'ODS' => Excel::ODS,
+                default => Excel::CSV,
+            };
+            return new DataModelsExport($data, $form)
+                ->download($entity . "." . Str::lower($format ?? ''), $writerType);
         } else {
             return response()->json(null, 404);
         }
@@ -109,7 +118,7 @@ class SearchController extends Controller
                 $entity = $set['entity'];
                 $field = $set['field'];
 
-                $data = $this->_makeBuilder($entity)?->whereIn('_id', $value)->get()->toArray();
+                $data = $this->_makeBuilder($entity)?->whereIn('id', $value)->get()->toArray();
                 $data = collect($data)->map(function ($res) use ($entity) {
                     $model = config('metamorph.models.' . $entity);
                     if (class_exists($model) && method_exists($model, 'label')) {
@@ -130,21 +139,48 @@ class SearchController extends Controller
      */
     private function _makeBuilder($entity): ?Builder
     {
-        $model = config('metamorph.models.' . $entity);
-        $repository = config('metamorph.repositories.' . $entity);
+        $model = Config::models($entity);
+        $repository = Config::repositories($entity);
 
         if ($repository && class_exists($repository)) {
             if (!(new $repository instanceof DataRepositoryBuilder)) {
                 abort(500, "The data repository must implement CrucialDigital\Metamorph\DataRepositoryBuilder class");
             }
-            return (new $repository)->builder();
+            return app($repository)->builder();
         }
 
         if (!class_exists($model)) {
-            abort(404, "Model not found ! v");
+            abort(404, "Model not found !");
         }
 
-        return $model::where('_id', 'exists', true);
+        return app($model)->where('id', 'exists', true);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function searchResponse($request, $entity, $builder)
+    {
+        if ($builder != null) {
+            $cacheService = app(\CrucialDigital\Metamorph\MetamorphCacheService::class);
+            $cacheEnabled = $cacheService->isEnabled($entity) && !$request->input('no_cache', false);
+
+            if ($cacheEnabled) {
+                $data = $cacheService->remember($entity, $request->all(), function () use ($builder) {
+                    return new ResourceQueryLoader($builder)->load();
+                });
+            } else {
+                $data = new ResourceQueryLoader($builder)->load();
+            }
+
+            if ($request->query('paginate', true)) {
+                return (new MasterCrudResourceCollection($data, $entity));
+            } else {
+                return response()->json($data);
+            }
+        } else {
+            return response()->json(null, 404);
+        }
     }
 
 

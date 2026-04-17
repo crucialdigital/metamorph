@@ -4,6 +4,8 @@ namespace CrucialDigital\Metamorph\Models;
 /**
  * @property string|null $type
  * @property string|null $field
+ * @property string|null $form_id
+ * @property bool|null $metamorph_input
  */
 
 class MetamorphFormInput extends BaseModel
@@ -12,9 +14,9 @@ class MetamorphFormInput extends BaseModel
         'required' => false,
         'type' => 'text'
     ];
-    protected $guarded = ['_id', 'id'];
+    protected $guarded = ['id', 'id'];
 
-    public static function search(): array
+    public static function searchField(): array
     {
         return ['name', 'field', 'label'];
     }

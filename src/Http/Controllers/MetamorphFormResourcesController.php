@@ -5,6 +5,7 @@ namespace CrucialDigital\Metamorph\Http\Controllers;
 
 use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
+use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
@@ -23,19 +24,22 @@ class MetamorphFormResourcesController extends Controller
         return response()->json($r);
     }
 
+    /**
+     * @throws Exception
+     */
     public function fetchResources($entity): JsonResponse
     {
 
-        $model = Config::models( $entity);
+        $model = Config::models($entity);
         $repository = Config::repositories($entity);
 
-        $repository = class_exists($repository) ? (new $repository)->builder() : $model::where('_id', 'exists', true);
+        $repository = class_exists($repository) ? (new $repository)->builder() : $model::where('id', 'exists', true);
 
         if (class_exists($model) && method_exists($model, 'label')) {
-            $data = $this->load($repository, $model::search());
+            $data = $this->load($repository, $model::searchField());
             return response()->json($this->transform($data, $model::label(), $model::labelValue()));
         } else {
-            return response()->json([]);
+            return response()->json();
         }
     }
 
@@ -43,32 +47,42 @@ class MetamorphFormResourcesController extends Controller
      * @param $builder
      * @param array $search
      * @return \Illuminate\Database\Eloquent\Collection|LengthAwarePaginator|array
+     * @throws Exception
      */
 
     private function load($builder, array $search = []): Collection|LengthAwarePaginator|array
     {
-        if (request()->has('term') && request()->input('term') != null) {
+        $term = request()->input('term');
+        if (isset($term)) {
             $query = [];
             foreach ($search as $item) {
-                $query[$item] = request()->input('term');
+                $query[] = [
+                    'value' => $term,
+                    'operator' => 'LIKE',
+                    'field' => $item,
+                    'coordinator' => 'or',
+                    'group' => 'and_searchGroup',
+                ];
             }
-            request()->merge(['search' => $query]);
+            $filters = request()->input('filters', []);
+            request()->merge(['filters' => array_merge($query, $filters)]);
         }
+        request()->merge(['term' => null]);
         request()->query->add(['paginate' => false]);
-        return (new ResourceQueryLoader($builder))->load($search);
+        return new ResourceQueryLoader($builder)->load($search);
     }
 
     /**
-     * @param Collection $collection
+     * @param Collection|array $collection
      * @param string $label
      * @param string $labelValue
      * @return Collection
      */
-    private function transform(Collection $collection, string $label, string $labelValue): Collection
+    private function transform(Collection|array $collection, string $label, string $labelValue): Collection
     {
-        return $collection->map(function (Model $item) use ($label, $labelValue) {
+        return collect($collection)->map(function (Model $item) use ($label, $labelValue) {
             return [
-                'value' => $item->getAttribute($labelValue) ?? $item->getAttribute('_id'),
+                'value' => $item->getAttribute($labelValue) ?? $item->getAttribute('id'),
                 'label' => $this->getAttribute($item, $label),
             ];
         });

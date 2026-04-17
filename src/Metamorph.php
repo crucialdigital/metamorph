@@ -6,7 +6,9 @@ use Countable;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\Models\MetamorphFormInput;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 
@@ -14,18 +16,20 @@ class Metamorph
 {
     public static function mapFormRequestData(Countable|array $form_data): array
     {
-        $form = MetamorphForm::where('_id', $form_data['form_id'] ?? null)
-            ->orWhere('entity', $form_data['entity'] ?? '__unknown__')
-            ->first();
+        $form = MetamorphForm::find($form_data['form_id']);
+        if (!$form) {
+            $form = MetamorphForm::where('entity', $form_data['entity'] ?? '__unknown__')
+                ->first();
+        }
         if (!$form) {
             return [];
         }
 
-        $extras = Config::models( $form_data['entity'])::extraFields() ?? [];
+        $extras = Config::models($form_data['entity'])::extraFields() ?? [];
 
         $form_inputs = $form['inputs'];
 
-        $rtr = ['form_id' => $form->getAttribute('_id')];
+        $rtr = ['form_id' => $form->getAttribute('id')];
         $rtr['entity'] = $form_data['entity'];
 
         foreach ($form_data as $k => $datum) {
@@ -41,14 +45,10 @@ class Metamorph
                 continue;
             }
 
-            if (isset($datum)) {
-                if ($self_input['type'] == 'password'
-                    && $self_input['encrypted'] == true) {
-                    $rtr[$k] = bcrypt($datum);
-                } else {
-                    $rtr[$k] = $datum;
-                }
-
+            if ($self_input['type'] == 'password' && $self_input['encrypted']) {
+                $rtr[$k] = bcrypt($datum);
+            } else {
+                $rtr[$k] = $datum;
             }
         }
         return $rtr;
@@ -118,5 +118,15 @@ class Metamorph
         $rtr = Storage::put($dest_path, file_get_contents($src_path), 'public');
         unlink($src_path);
         return $rtr ? $dest_path : null;
+    }
+
+    public static function clearSearchCache($entity): void
+    {
+        app(\CrucialDigital\Metamorph\MetamorphCacheService::class)->invalidate($entity);
+    }
+
+    public static function hasCache($entity): bool
+    {
+        return app(\CrucialDigital\Metamorph\MetamorphCacheService::class)->isEnabled($entity);
     }
 }

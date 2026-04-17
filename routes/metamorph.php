@@ -21,8 +21,11 @@ Route::prefix('api/' . Config::routePrefix())->middleware(['api'])->group(functi
         Route::apiResource('/form-inputs', MetamorphFormInputController::class)->except(['index']);
         Route::post('/validate/form-data/{id}', [MetamorphFormDataController::class, 'validateFormData']);
         Route::patch('/reject/form-data/{id}', [MetamorphFormDataController::class, 'rejectFormData']);
+        Route::delete('/master/force-delete/{entity}/{id}', [MasterCrudController::class, 'delete']);
+        Route::post('/master/restore/{entity}/{id}', [MasterCrudController::class, 'restore']);
         Route::apiResource('/master/{entity}', MasterCrudController::class)
-            ->except(['index'])->parameters([
+            ->except(['index'])
+            ->parameters([
                 '{entity}' => 'id'
             ]);
         Route::prefix('resources')->group(function () {

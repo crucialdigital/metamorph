@@ -2,6 +2,8 @@
 
 namespace CrucialDigital\Metamorph;
 
+use MongoDB\Laravel\Eloquent\Model;
+
 class Config
 {
     /**
@@ -43,11 +45,21 @@ class Config
 
     /**
      * @param $model
-     * @return mixed
+     * @return mixed|string|Model
      */
     public static function models($model): mixed
     {
         return (isset($model)) ? config("metamorph.models.$model") : config("metamorph.models", []);
+    }
+
+
+    /**
+     * @param $model
+     * @return array
+     */
+    public static function caches($model): array
+    {
+        return (isset($model)) ? config("metamorph.caches.$model", []) : [];
     }
 
 

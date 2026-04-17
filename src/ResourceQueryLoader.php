@@ -5,27 +5,44 @@ namespace CrucialDigital\Metamorph;
 
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use MongoDB\Laravel\Eloquent\Builder;
 use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\EmbedsMany;
+use MongoDB\Laravel\Relations\EmbedsOne;
 
 class ResourceQueryLoader
 {
-    protected Builder|\MongoDB\Laravel\Eloquent\Builder|Model|null $builder;
+    protected Builder|Model|null $builder;
 
-    public function __construct(?Builder $builder)
+    const array OPERATOR = [
+        '=' => '$eq',
+        '>' => '$gt',
+        '>=' => '$gte',
+        '<' => '$lt',
+        '<=' => '$lte',
+        '!=' => '$ne',
+        'in' => '$in',
+    ];
+
+    public function __construct(Builder|\Illuminate\Database\Eloquent\Builder|Model|null $builder)
     {
         $this->builder = $builder;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function load($columns = ['*']): LengthAwarePaginator|array|Expression|Collection
     {
         if (!($this->builder instanceof Builder)) {
             return [];
         }
         $per_page = (int)request()->query('per_page', 15);
+        $limit = (int)request()->query('limit');
         $order_by = request()->query('order_by', 'created_at');
         $order_direction = request()->query('order_direction', 'ASC');
         $paginate = (bool)request()->query('paginate', true);
@@ -40,11 +57,15 @@ class ResourceQueryLoader
         if ($filters) {
             $this->filter($filters);
         }
-        $select = request()->input('columns', ['*']);
+        $columns = request()->input('columns', $columns);
 
-        $this->builder = $this->builder->select($select);
+        $this->builder = $this->builder->select($columns);
 
-        $this->builder = $this->builder->orderBy($order_by, $order_direction);
+        foreach (explode('|', $order_by) as $k => $str) {
+            $directions = explode('|', $order_direction);
+            $direction = $directions[$k] ?? $directions[0] ?? 'ASC';
+            $this->builder = $this->builder->orderBy($str, $direction);
+        }
 
         if ($only_trash) {
             $this->builder = $this->builder->onlyTrashed();
@@ -53,21 +74,50 @@ class ResourceQueryLoader
         if ($with_trash) {
             $this->builder = $this->builder->withTrashed();
         }
+        if ($limit) {
+            $this->builder = $this->builder->limit($limit);
+        }
 
         if ($randomize) {
-            $data = $this->builder->raw(function ($collection) use ($per_page) {
-                return $collection->aggregate([
+            $data = $this->builder->raw(function ($collection) use ($per_page, $filters) {
+                $conditions = [];
+                foreach ($filters as $filter) {
+                    if (!isset($filter['operator'])) {
+                        $filter['operator'] = '=';
+                    }
+                    if (isset($filter['field'])) {
+                        $operator = isset(self::OPERATOR[$filter['operator']]) ? Str::lower(self::OPERATOR[$filter['operator']]) : '$eq';
+                        $conditions[$filter['field']] = [
+                            $operator => $filter['value']
+                        ];
+                    }
+                }
+
+                $aggregate = [
                     [
                         '$sample' => [
                             'size' => $per_page
                         ]
-                    ],
-                ]);
+                    ]
+                ];
+
+                if (count($conditions) > 0) {
+                    $aggregate[] =
+                        [
+                            '$match' => $conditions,
+                        ];
+                }
+
+                return $collection->aggregate($aggregate);
             });
-            if ($with != null) $data = $data->load($with);
+            if ($with != null) {
+                $data = $data->load($with);
+            }
             return $data;
         } else {
-            if ($with != null) $this->builder = $this->builder->with($with);
+            if ($with != null) {
+                $this->builder = $this->builder->with($with);
+            }
         }
 
         return $paginate
@@ -79,45 +129,40 @@ class ResourceQueryLoader
     /**
      * @param mixed $search
      * @return void
+     * @throws \Exception
      */
-    private function search(mixed $search)
+    private function search(mixed $search): void
     {
-        $queries = (!is_array($search)) ? json_decode($search, true) : $search;
+        $queries = (!is_array($search)) ? (json_decode($search, true) ?? []) : $search;
         $term = request()->query('term');
         if (isset($term)) {
-            $columns = $this->builder->getModel()::class::search() ?? [];
+            $columns = $this->builder->getModel()::class::searchField() ?? [];
             foreach ($columns as $column) {
                 $queries[$column] = $term;
             }
         }
-        if ($queries != null && count($queries) > 0) {
-            $this->builder->where(function ($builder) use ($queries) {
-                $i = 0;
-                foreach ($queries as $k => $query) {
-                    if ($i == 0) {
-                        if ($k != '_id') {
-                            $builder->where($k, 'LIKE', '%' . $query . '%');
-                        } else {
-                            $builder->where($k, $query);
-                        }
-                    } else {
-                        if ($k != '_id') {
-                            $builder->orWhere($k, 'LIKE', '%' . $query . '%');
-                        } else {
-                            $builder->orWhere($k, $query);
-                        }
-                    }
-                    $i++;
-                }
-            });
+        $search_filters = [];
+        foreach ($queries as $field => $value) {
+            $search_filters[] = [
+                'field' => $field,
+                'operator' => 'LIKE',
+                'value' => $value,
+                'coordinator' => 'or',
+                'group' => 'and_searchGroup',
+            ];
         }
+        $filters = request()->input('filters', []);
+        request()->merge(['term' => null]);
+        $filters = array_merge($search_filters, $filters);
+        $this->filter($filters);
     }
 
     /**
      * @param $queries
      * @return void
+     * @throws \Exception
      */
-    private function filter($queries)
+    private function filter($queries): void
     {
         $filters = (is_string($queries)) ? json_decode($queries, false) : $queries;
 
@@ -163,9 +208,16 @@ class ResourceQueryLoader
             : [];
 
         $with = [...$query_relations, ...$input_relations];
-        return count($with) > 0 ? collect($with)->filter(function ($relation) use (&$builder) {
-            return method_exists(get_class($builder->getModel()), $relation);
-        })->toArray() : null;
+
+        if (count($with) === 0) {
+            return null;
+        }
+
+        $model = $builder->getModel();
+
+        return collect($with)
+            ->filter(fn ($relation) => is_callable([$model, $relation]))
+            ->toArray();
     }
 
     /**
@@ -174,16 +226,11 @@ class ResourceQueryLoader
      */
     protected function getDateArrayValue(mixed $value): array
     {
-        if (is_array($value)) {
-            if (count($value) >= 2) {
-                $value = [new Carbon($value[0]), new  Carbon($value[1])];
-            } else {
-                $value = [new Carbon($value[0] ?? null), new  Carbon($value[0] ?? null)];
-            }
-        } else {
-            $value = [new Carbon($value), new  Carbon($value)];
-        }
-        return $value;
+        $dates = is_array($value) ? $value : [$value];
+        $start = Carbon::parse($dates[0] ?? now());
+        $end = Carbon::parse($dates[1] ?? $dates[0] ?? now());
+
+        return [$start, $end];
     }
 
     /**
@@ -194,7 +241,7 @@ class ResourceQueryLoader
      * @param Builder|null $builder
      * @return void
      */
-    protected function bindQuery($field, $operator, $value, string $coordinator = 'and', Builder $builder = null)
+    protected function bindQuery($field, $operator, $value, string $coordinator = 'and', ?Builder $builder = null): void
     {
         if ($builder == null) {
             //In case of relation sub-query, don't use the global builder
@@ -235,6 +282,22 @@ class ResourceQueryLoader
             case 'DATEAFTEREQ':
                 $builder->whereDate($field, '>=', $value, Str::lower($coordinator));
                 break;
+            case 'DATETIMEBEFORE':
+                $builder->whereDate($field, '<', $value, Str::lower($coordinator))
+                    ->whereTime($field, '<', new Carbon($value), Str::lower($coordinator));
+                break;
+            case 'DATETIMEAFTER':
+                $builder->whereDate($field, '>', $value, Str::lower($coordinator))
+                    ->whereTime($field, '>', new Carbon($value), Str::lower($coordinator));
+                break;
+            case 'DATETIMEBEFOREQ':
+                $builder->whereDate($field, '<=', $value, Str::lower($coordinator))
+                    ->whereTime($field, '<=', new Carbon($value), Str::lower($coordinator));
+                break;
+            case 'DATETIMEAFTEREQ':
+                $builder->whereDate($field, '>=', $value, Str::lower($coordinator))
+                    ->whereTime($field, '>=', new Carbon($value), Str::lower($coordinator));
+                break;
             case 'DATENOT':
                 $builder->whereDate($field, '!=', $value, Str::lower($coordinator));
                 break;
@@ -255,8 +318,9 @@ class ResourceQueryLoader
      * @param $input
      * @param $builder
      * @return void
+     * @throws \Exception
      */
-    protected function bindFieldFilter($input, $builder = null)
+    protected function bindFieldFilter($input, $builder = null): void
     {
         if ($builder == null) {
             //In case of relation sub-query, don't use the global builder
@@ -275,13 +339,31 @@ class ResourceQueryLoader
                 $parts = explode('.', $field);
                 $last = array_pop($parts);
                 $relations = implode('.', $parts);
-                $builder->whereHas($relations, function (Builder $builder) use ($last, $operator, $value, $coordinator) {
-                    $this->bindQuery($last, $operator, $value, $coordinator, $builder);
-                });
+                $first = array_shift($parts);
+                $relationClass = $this->relationExists($first, $builder);
+
+                if ($relationClass) {
+                    if ($relationClass instanceof EmbedsOne || $relationClass instanceof EmbedsMany) {
+                        $this->bindQuery($relations . '.' . $last, $operator, $value, $coordinator, $builder);
+                    } else {
+                        $builder->has($relations, '>=', 1, $coordinator, function (Builder $builder) use ($last, $operator, $value, $coordinator) {
+                            $this->bindQuery($last, $operator, $value, $coordinator, $builder);
+                        });
+                    }
+                }
+
             } else {
                 $this->bindQuery($field, $operator, $value, $coordinator, $builder);
             }
         }
     }
 
+    private function relationExists(string $relation, Builder $builder): bool|Relation
+    {
+        try {
+            return $builder->getRelation($relation);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }

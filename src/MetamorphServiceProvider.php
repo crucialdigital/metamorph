@@ -7,6 +7,7 @@ use CrucialDigital\Metamorph\Commands\MakeDataModel;
 use CrucialDigital\Metamorph\Commands\MakeInheritModel;
 use CrucialDigital\Metamorph\Commands\MakeRepository;
 use CrucialDigital\Metamorph\Commands\MetamorphCommand;
+use CrucialDigital\Metamorph\Commands\MigrateFormInputsCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -29,7 +30,8 @@ class MetamorphServiceProvider extends PackageServiceProvider
                     MakeInheritModel::class,
                     MakeRepository::class,
                     InstallMetamorph::class,
-                    MakeDataModel::class
+                    MakeDataModel::class,
+                    MigrateFormInputsCommand::class,
                 ]
             );
     }

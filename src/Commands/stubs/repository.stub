@@ -11,6 +11,6 @@ class {{ class_name }} extends DataRepositoryBuilder
 
     public function builder(): Builder
     {
-        return {{ model }}::where('_id', 'exists', true);
+        return {{ model }}::where('id', 'exists', true);
     }
 }

@@ -3,6 +3,7 @@
 namespace CrucialDigital\Metamorph\Models;
 
 
+use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use MongoDB\Laravel\Eloquent\Builder;
@@ -12,7 +13,7 @@ use MongoDB\Laravel\Relations\EmbedsOneOrMany;
 use MongoDB\Operation\FindOneAndUpdate;
 
 /**
- * @property-read string $_id
+ * @property-read string $id
  * @property string $ref
  * @method static Model|self first()
  * @method static findOrFail(string $id)
@@ -20,15 +21,16 @@ use MongoDB\Operation\FindOneAndUpdate;
  * @method static Model|mixed find(string $id)
  * @method static Model updateOrCreate(array $search, array $attributes = [])
  * @method static Model create(array $attributes)
- * @method static Builder|Model where(string $column, string $operator = '=', mixed|null $value = null)
+ * @method static Builder|Model where(string|Closure $column, mixed $operator, mixed|null $value = null)
  * @method static Builder|Model whereIn(string $column, array $value = [])
- * @method static Builder|Model orderBy(string $column, string $direction)
+ * @method static Builder|Model orderBy(string $column, string $direction = 'asc')
  */
 abstract class BaseModel extends Model
 {
 
+    protected $primaryKey = 'id';
     public $timestamps = true;
-    protected $guarded = ['_id'];
+    protected $guarded = ['id', '_id', 'created_at', 'updated_at', 'deleted_at'];
     protected $appends = ['id'];
 
     protected $casts = [
@@ -37,13 +39,13 @@ abstract class BaseModel extends Model
         'deleted_at' => 'datetime',
     ];
 
-    public static abstract function search(): array;
+    public static abstract function searchField(): array;
 
     public static abstract function label(): string;
 
     public static function labelValue(): string
     {
-        return '_id';
+        return 'id';
     }
 
     public static function exportsFields(): array
@@ -56,7 +58,7 @@ abstract class BaseModel extends Model
         return [];
     }
 
-    public function nextId()
+    public function nextId(): void
     {
         // ref is the counter - change it to whatever you want to increment
         $this->ref = self::getID($this->getTable());

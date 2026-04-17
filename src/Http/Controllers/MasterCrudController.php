@@ -7,34 +7,34 @@ use CrucialDigital\Metamorph\Config;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterStoreFormRequest;
 use CrucialDigital\Metamorph\Http\Requests\StoreMasterUpdateFormRequest;
 use CrucialDigital\Metamorph\Metamorph;
+use CrucialDigital\Metamorph\Models\BaseModel;
 use CrucialDigital\Metamorph\Models\MetamorphForm;
 use CrucialDigital\Metamorph\ResourceQueryLoader;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
-use MongoDB\Laravel\Eloquent\Builder;
 
-class MasterCrudController extends Controller
+class MasterCrudController extends Controller implements HasMiddleware
 {
 
-    public function __construct()
+    public static function middleware(): array
     {
+        $middlewares = [];
         $model = request()->route('entity');
-        $middlewares = Config::modelMiddleware($model);
-        if (isset($middlewares[$model])) {
-            foreach ($middlewares[$model] as $middleware => $only) {
+        $middlewares_config = Config::modelMiddleware($model);
+        if (isset($middlewares_config)) {
+            foreach ($middlewares_config as $middleware => $only) {
                 if (is_string($only) && $only == '*') {
-                    if (class_exists($middleware)) {
-                        $this->middleware($middleware);
-                    }
+                    $middlewares[] = new Middleware($middleware);
                 } else {
-                    if (class_exists($middleware) && is_array($only)) {
-                        $this->middleware($middleware, ['only' => $only]);
-                    }
+                    $middlewares[] = new Middleware($middleware, only: $only);
                 }
             }
         }
+        return $middlewares;
     }
 
     /**
@@ -55,16 +55,16 @@ class MasterCrudController extends Controller
 
         $formData = Metamorph::mapFormRequestData($request->all());
 
-        $entity = config('metamorph.models.' . $model)::create($formData);
+        $entity = app(config('metamorph.models.' . $model))->create($formData);
 
-        if ($entity && $entity->_id) {
+        if ($entity && $entity->id) {
             $entity->fill(Metamorph::mapFormRequestFiles(
                 $request,
-                $entity->_id,
+                $entity->id,
                 $request->input('form_id')
             ))->save();
         }
-
+        Metamorph::clearSearchCache($model);
         return response()->json($entity->fresh());
 
     }
@@ -78,19 +78,23 @@ class MasterCrudController extends Controller
      */
     public function show(string $model, string $id): JsonResponse
     {
-        /**
-         * @var Builder $data
-         */
-        $data = Config::models($model)::where('_id', '=', $id);
+        $columns = request()->query('columns', ['*']);
+        $data = app(Config::models($model))->where('id', '=', $id);
         $with = ResourceQueryLoader::makeRelations($data);
         if ($with != null) $data = $data->with($with);
-        $data = $data->firstOrFail();
+        $columns = is_array($columns) ? $columns : explode('|', $columns);
+        $data = $data->first($columns);
+
+        if ($data == null) {
+            abort(404, __('http-statuses.404'));
+        }
 
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('view', $policies)) {
             Gate::authorize("view", $data);
         }
+
 
         $form = MetamorphForm::where('entity', $model)->latest()->first();
         $inputs = $form?->getAttribute('inputs');
@@ -100,7 +104,7 @@ class MasterCrudController extends Controller
                     return in_array($input['type'], ['resource', 'multiresource', 'selectresource']);
                 })->map(function ($el) use ($data) {
                     try {
-                        $res = Config::models($el['entity'])::find($data[$el['field']]);
+                        $res = app(Config::models($el['entity']))->find($data[$el['field']]);
                     } catch (Exception $e) {
                         $res = null;
                     }
@@ -108,7 +112,7 @@ class MasterCrudController extends Controller
                         $value = join(', ', collect($res)->map(function ($entry) use ($el) {
                             return $entry->getAttribute(Config::models($el['entity'])::label());
                         })->values()->toArray());
-                    }else{
+                    } else {
                         $value = $res ? $res->getAttribute(Config::models($el['entity'])::label()) : '';
                     }
                     return [
@@ -119,6 +123,7 @@ class MasterCrudController extends Controller
 
             $data['meta_data'] = array_values($metas->toArray());
         }
+
         return response()->json($data);
     }
 
@@ -132,7 +137,13 @@ class MasterCrudController extends Controller
      */
     public function update(StoreMasterUpdateFormRequest $request, string $model, string $id): JsonResponse
     {
-        $entity = Config::models($model)::findOrFail($id);
+        /**
+         * @var BaseModel $entity
+         */
+        $entity = app(Config::models($model))->find($id);
+        if (!isset($entity)) {
+            abort(404, __('http-statuses.404'));
+        }
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
         if (in_array('update', $policies)) {
@@ -142,7 +153,9 @@ class MasterCrudController extends Controller
         $formData = Metamorph::mapFormRequestData($data);
         $files = Metamorph::mapFormRequestFiles($request, $id, $request->input('form_id'));
 
-        $entity->fill($formData)->fill($files)->save();
+        $entity->fill($formData)->fill($files)->unsetRelations()->save();
+
+        Metamorph::clearSearchCache($model);
 
         return response()->json($entity->fresh());
     }
@@ -157,7 +170,11 @@ class MasterCrudController extends Controller
     public function destroy(string $model, string $id): JsonResponse
     {
 
-        $data = Config::models($model)::findOrFail($id);
+        $data = app(Config::models($model))->find($id);
+
+        if (!$data) {
+            abort(404, __('http-statuses.404'));
+        }
 
         $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
 
@@ -165,7 +182,69 @@ class MasterCrudController extends Controller
             Gate::authorize("delete", $data);
         }
 
-        $data?->delete();
+        $data->delete();
+
+        Metamorph::clearSearchCache($model);
+
         return response()->json($data);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param string $model
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function delete(string $model, string $id): JsonResponse
+    {
+        $data = app(Config::models($model))->withTrashed()->find($id);
+
+        if (!$data) {
+            abort(404, __('http-statuses.404'));
+        }
+
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
+
+        if (in_array('forcedelete', $policies)) {
+            Gate::authorize("forceDelete", $data);
+        }
+
+        $data->forceDelete();
+
+        Metamorph::clearSearchCache($model);
+
+        return response()->json($data);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param string $model
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function restore(string $model, string $id): JsonResponse
+    {
+        /**
+         * @var BaseModel $data
+         */
+        $data = app(Config::models($model))->withTrashed()->find($id);
+
+        if (!$data) {
+            abort(404, __('http-statuses.404'));
+        }
+
+        $policies = collect(Config::policies($model))->map(fn($police) => Str::lower($police))->toArray();
+
+        if (in_array('restore', $policies)) {
+            Gate::authorize("restore", $data);
+        }
+
+        $data->restore();
+
+        Metamorph::clearSearchCache($model);
+
+        return response()->json($data->fresh());
     }
 }
